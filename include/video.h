@@ -30,6 +30,11 @@ private:
     struct Vertex {
         Vector2 position;
     };
+    struct IndexTriangle {
+        unsigned int a;
+        unsigned int b;
+        unsigned int c;
+    };
 
     SDL_Window* window;
     SDL_GPUDevice* gpuDevice;
@@ -39,7 +44,10 @@ private:
     SDL_GPUBuffer* vertexBuffer;
     SDL_GPUBuffer* indexBuffer;
     SDL_GPUBuffer* miscBuffer;
+    SDL_GPUTransferBuffer* miscTransferBuffer;
 
     bool initWindow();
     bool initGraphics();
+    void createPipeline();
+    void loadMeshes();
 };

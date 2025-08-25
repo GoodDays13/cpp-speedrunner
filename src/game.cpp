@@ -30,5 +30,8 @@ void Game::update() {
 }
 
 void Game::render() {
-    video.render({}, {}, std::vector<Video::RenderInfo>());
+    std::vector<Video::RenderInfo> objects;
+    objects.push_back({Video::SQUARE, {1, 0}, {1, .5}});
+    objects.push_back({Video::SQUARE, {-1, 0}, {1, 1}});
+    video.render({0, 0}, {16, 9}, objects);
 }
