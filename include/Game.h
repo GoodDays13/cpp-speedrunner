@@ -1,5 +1,5 @@
-#include "gameobject.h"
-#include "video.h"
+#include "GameObject.h"
+#include "Video.h"
 #include <vector>
 
 class Game {

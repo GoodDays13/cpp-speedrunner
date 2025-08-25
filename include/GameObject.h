@@ -1,4 +1,4 @@
-#include "video.h"
+#include "Video.h"
 class GameObject {
 public:
     GameObject() : position({}), scale({1, 1}), velocity({}) {}

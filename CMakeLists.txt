@@ -44,8 +44,8 @@ add_custom_target(embed_shaders ALL DEPENDS ${GENERATED_HEADERS})
 
 add_executable(speedrunner
 	src/main.cpp
-	src/game.cpp
-	src/video.cpp
+	src/Game.cpp
+	src/Video.cpp
 )
 
 add_dependencies(speedrunner embed_shaders)

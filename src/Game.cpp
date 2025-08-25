@@ -1,5 +1,5 @@
-#include "game.h"
-#include "video.h"
+#include "Game.h"
+#include "Video.h"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_timer.h>
 #include <vector>
