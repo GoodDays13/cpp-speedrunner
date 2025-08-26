@@ -166,7 +166,7 @@ void Video::loadMeshes() {
 
     indexMap[0] = {0, 1, 2};
     indexMap[1] = {1, 2, 3};
-    
+
     SDL_UnmapGPUTransferBuffer(gpuDevice, transfer);
 
     SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(gpuDevice);
@@ -184,6 +184,10 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     viewport.h = window_height;
 
     SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(gpuDevice);
+
+    SDL_GPUTexture* swapchain;
+
+    SDL_WaitAndAcquireGPUSwapchainTexture(cmd, window, &swapchain, &window_width, &window_height);
 
     void* miscMap = SDL_MapGPUTransferBuffer(gpuDevice, miscTransferBuffer, false);
     Vector2* vectorData = (Vector2*)miscMap;
@@ -203,7 +207,7 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     SDL_GPUBufferRegion miscDst = {};
     miscDst.buffer = miscBuffer;
     miscDst.size = sizeof(Vector2) * 2 * objects.size();
-    
+
     SDL_UploadToGPUBuffer(copypass, &miscSrc, &miscDst, false);
 
     SDL_EndGPUCopyPass(copypass);
@@ -226,10 +230,6 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     mapped[3]  = 0.0f;   mapped[7]  = 0.0f;   mapped[11] = 0.0f; mapped[15] = 1.0f;
 
     SDL_PushGPUVertexUniformData(cmd, 0, mapped, 16 * sizeof(float));
-
-    SDL_GPUTexture* swapchain;
-
-    SDL_WaitAndAcquireGPUSwapchainTexture(cmd, window, &swapchain, &window_width, &window_height);
 
     SDL_GPUColorTargetInfo colors = {};
     colors.texture = swapchain;

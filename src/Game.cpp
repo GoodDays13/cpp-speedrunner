@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "Video.h"
+#include "Player.h"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_timer.h>
 #include <vector>
@@ -10,14 +11,20 @@ bool Game::initialize() {
     if (!video.initialize())
         return false;
 
-    player = new GameObject();
+    player = new Player();
 
     objects.push_back(player);
+
+    GameObject* floor = new GameObject();
+    floor->position = {-8, -4};
+    floor->scale = {16, 1};
+    objects.push_back(floor);
 
     return true;
 };
 
 void Game::run() {
+    lastFrameTime = SDL_GetTicks();
     isRunning = true;
     while (isRunning) {
         unsigned long currentTime = SDL_GetTicks();
@@ -28,19 +35,9 @@ void Game::run() {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 isRunning = false;
-            } else if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
-                if (event.key.repeat)
-                    continue;
-                switch (event.key.scancode) {
-                    case SDL_SCANCODE_A:
-                        player->velocity.x += event.type == SDL_EVENT_KEY_DOWN ? -1 : 1;
-                        break;
-                    case SDL_SCANCODE_D:
-                        player->velocity.x += event.type == SDL_EVENT_KEY_DOWN ? 1 : -1;
-                        break;
-                    default:
-                        break;
-                }
+            }
+            for (int i = 0; i < objects.size(); i++) {
+                objects[i]->handleEvent(event);
             }
         }
 
@@ -51,9 +48,23 @@ void Game::run() {
 
 void Game::update(float deltaTime) {
     for (int i = 0; i < objects.size(); i++) {
-        GameObject* object = objects[i];
-        object->position += object->velocity * deltaTime;
+        objects[i]->update(deltaTime);
     }
+
+    for (int i = 0; i < objects.size(); i++) {
+        if (objects[i] == player)
+            continue;
+        Vector2 mtv = player->computeMTV(*objects[i]);
+        player->position += mtv;
+        if (mtv.y > 0) {
+            player->coyoteTimer = player->coyoteTime;
+            player->velocity.y = std::max(player->velocity.y, 0.0f);
+        } else if (mtv.y < 0) {
+            player->velocity.y = std::min(player->velocity.y, 0.0f);
+        }
+    }
+
+    cameraPosition += (player->position - cameraPosition) * 5.0f * deltaTime;
 }
 
 void Game::render() {
@@ -61,5 +72,5 @@ void Game::render() {
     for (int i = 0; i < objects.size(); i++) {
         infos.push_back({Video::SQUARE, objects[i]->position, objects[i]->scale});
     }
-    video.render({0, 0}, {16, 9}, infos);
+    video.render(cameraPosition, {16, 9}, infos);
 }

@@ -1,4 +1,7 @@
+#pragma once
+
 #include "GameObject.h"
+#include "Player.h"
 #include "Video.h"
 #include <vector>
 
@@ -11,8 +14,9 @@ public:
 private:
     Video video;
     std::vector<GameObject*> objects;
-    GameObject* player;
+    Player* player;
     unsigned long lastFrameTime;
+    Vector2 cameraPosition;
 
     void processInput();
     void update(float deltaTime);
