@@ -47,6 +47,8 @@ bool Video::initGraphics() {
         return false;
     }
 
+    SDL_SetGPUSwapchainParameters(gpuDevice, window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_MAILBOX);
+
     // Load shaders
     SDL_GPUShaderCreateInfo shader_info = {};
     shader_info.code_size = vertex_vert_spv_len;
@@ -271,4 +273,8 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     inFlightFrames[i] = SDL_SubmitGPUCommandBufferAndAcquireFence(cmd);
 
     frameIndex++;
+}
+
+const SDL_DisplayMode* Video::getDisplayMode() {
+    return SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(window));
 }

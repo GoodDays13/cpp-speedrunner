@@ -2,6 +2,7 @@
 #include "Video.h"
 #include "Player.h"
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_timer.h>
 #include <vector>
 
@@ -10,6 +11,8 @@ Game::Game() = default;
 bool Game::initialize() {
     if (!video.initialize())
         return false;
+
+    framerateLimit = video.getDisplayMode()->refresh_rate;
 
     player = new Player();
 
@@ -24,11 +27,18 @@ bool Game::initialize() {
 };
 
 void Game::run() {
-    lastFrameTime = SDL_GetTicks();
+    const Uint64 frameDelay = 1000000000ULL / (framerateLimit > 0 ? framerateLimit : 60);
+    lastFrameTime = SDL_GetTicksNS();
     isRunning = true;
     while (isRunning) {
-        unsigned long currentTime = SDL_GetTicks();
-        float deltaTime = (float)(currentTime - lastFrameTime) / 1000;
+        Uint64 currentTime = SDL_GetTicksNS();
+        Uint64 elapsedTime = currentTime - lastFrameTime;
+        if (elapsedTime < frameDelay) {
+            SDL_DelayNS(frameDelay - elapsedTime);
+            currentTime = SDL_GetTicksNS();
+            elapsedTime = currentTime - lastFrameTime;
+        }
+        float deltaTime = (float)elapsedTime / 1e9f;
         lastFrameTime = currentTime;
 
         SDL_Event event;
