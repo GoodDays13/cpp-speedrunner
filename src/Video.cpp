@@ -136,7 +136,12 @@ void Video::loadMeshes() {
     vertexBuffer = SDL_CreateGPUBuffer(gpuDevice, &vertexInfo);
     indexBuffer = SDL_CreateGPUBuffer(gpuDevice, &indexInfo);
     miscBuffer = SDL_CreateGPUBuffer(gpuDevice, &miscInfo);
-    miscTransferBuffer = SDL_CreateGPUTransferBuffer(gpuDevice, &miscTransferInfo);
+    miscTransferBuffers[0] = SDL_CreateGPUTransferBuffer(gpuDevice, &miscTransferInfo);
+    miscTransferBuffers[1] = SDL_CreateGPUTransferBuffer(gpuDevice, &miscTransferInfo);
+    miscTransferBuffers[2] = SDL_CreateGPUTransferBuffer(gpuDevice, &miscTransferInfo);
+    inFlightFrames[0] = nullptr;
+    inFlightFrames[1] = nullptr;
+    inFlightFrames[2] = nullptr;
 
     SDL_GPUTransferBufferCreateInfo transferInfo = {};
     transferInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
@@ -185,9 +190,18 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
 
     SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(gpuDevice);
 
+    int i = frameIndex % 3;
+    if (inFlightFrames[i]) {
+        SDL_WaitForGPUFences(gpuDevice, true, &inFlightFrames[i], 1);
+        SDL_ReleaseGPUFence(gpuDevice, inFlightFrames[i]);
+        inFlightFrames[i] = nullptr;
+    }
+
     SDL_GPUTexture* swapchain;
 
     SDL_WaitAndAcquireGPUSwapchainTexture(cmd, window, &swapchain, &window_width, &window_height);
+
+    SDL_GPUTransferBuffer* miscTransferBuffer = miscTransferBuffers[i];
 
     void* miscMap = SDL_MapGPUTransferBuffer(gpuDevice, miscTransferBuffer, false);
     Vector2* vectorData = (Vector2*)miscMap;
@@ -254,5 +268,7 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
 
     SDL_EndGPURenderPass(render);
 
-    SDL_SubmitGPUCommandBuffer(cmd);
+    inFlightFrames[i] = SDL_SubmitGPUCommandBufferAndAcquireFence(cmd);
+
+    frameIndex++;
 }

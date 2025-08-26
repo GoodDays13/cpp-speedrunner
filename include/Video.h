@@ -44,7 +44,9 @@ private:
     SDL_GPUBuffer* vertexBuffer;
     SDL_GPUBuffer* indexBuffer;
     SDL_GPUBuffer* miscBuffer;
-    SDL_GPUTransferBuffer* miscTransferBuffer;
+    SDL_GPUTransferBuffer* miscTransferBuffers[3];
+    SDL_GPUFence* inFlightFrames[3];
+    unsigned int frameIndex = 0;
 
     bool initWindow();
     bool initGraphics();
