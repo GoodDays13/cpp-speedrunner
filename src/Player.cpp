@@ -29,4 +29,8 @@ void Player::update(float deltaTime) {
     coyoteTimer -= deltaTime;
     velocity.y -= gravity * deltaTime;
     GameObject::update(deltaTime);
+    if (position.y < -50.0f) {
+        position = {0.0f, 0.0f};
+        velocity.y = 0.0f;
+    }
 }

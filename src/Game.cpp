@@ -45,6 +45,12 @@ void Game::run() {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 isRunning = false;
+            } else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+                float x = (event.button.x / video.window_width - 0.5) * 16 + cameraPosition.x;
+                float y = (event.button.y / video.window_height - 0.5) * -9 + cameraPosition.y;
+                GameObject* obj = new GameObject();
+                obj->position = {x, y};
+                objects.push_back(obj);
             }
             for (int i = 0; i < objects.size(); i++) {
                 objects[i]->handleEvent(event);

@@ -24,6 +24,7 @@ public:
     unsigned int window_height;
 
     Video();
+    ~Video();
     bool initialize();
     void render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<RenderInfo> &objects);
     const SDL_DisplayMode* getDisplayMode();
@@ -53,4 +54,5 @@ private:
     bool initGraphics();
     void createPipeline();
     void loadMeshes();
+    void cleanup();
 };

@@ -5,6 +5,7 @@
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_gpu.h>
+#include <cmath>
 
 #include "Video.h"
 #include "shaders.h"
@@ -12,6 +13,10 @@
 Video::Video() {
     window_width = 1280;
     window_height = 720;
+}
+
+Video::~Video() {
+    cleanup();
 }
 
 bool Video::initialize() {
@@ -130,10 +135,10 @@ void Video::loadMeshes() {
     indexInfo.size = sizeof(IndexTriangle) * 2;
 
     miscInfo.usage = SDL_GPU_BUFFERUSAGE_VERTEX;
-    miscInfo.size = 1024;
+    miscInfo.size = std::pow(2, 20);
 
     miscTransferInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-    miscTransferInfo.size = 1024;
+    miscTransferInfo.size = std::pow(2, 20);
 
     vertexBuffer = SDL_CreateGPUBuffer(gpuDevice, &vertexInfo);
     indexBuffer = SDL_CreateGPUBuffer(gpuDevice, &indexInfo);
@@ -277,4 +282,23 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
 
 const SDL_DisplayMode* Video::getDisplayMode() {
     return SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(window));
+}
+
+void Video::cleanup() {
+    SDL_ReleaseGPUFence(gpuDevice, inFlightFrames[0]);
+    SDL_ReleaseGPUFence(gpuDevice, inFlightFrames[1]);
+    SDL_ReleaseGPUFence(gpuDevice, inFlightFrames[2]);
+    SDL_ReleaseGPUTransferBuffer(gpuDevice, miscTransferBuffers[0]);
+    SDL_ReleaseGPUTransferBuffer(gpuDevice, miscTransferBuffers[1]);
+    SDL_ReleaseGPUTransferBuffer(gpuDevice, miscTransferBuffers[2]);
+    SDL_ReleaseGPUBuffer(gpuDevice, miscBuffer);
+    SDL_ReleaseGPUBuffer(gpuDevice, indexBuffer);
+    SDL_ReleaseGPUBuffer(gpuDevice, vertexBuffer);
+    SDL_ReleaseGPUGraphicsPipeline(gpuDevice, graphicsPipeline);
+    SDL_ReleaseGPUShader(gpuDevice, fragmentShader);
+    SDL_ReleaseGPUShader(gpuDevice, vertexShader);
+    SDL_ReleaseWindowFromGPUDevice(gpuDevice, window);
+    SDL_DestroyGPUDevice(gpuDevice);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 }
