@@ -60,4 +60,7 @@ void Player::handleMTV(Vector2 mtv) {
         velocity.y = std::min(velocity.y, 0.0f);
         jumpTimer = 0.0f;
     }
+    if (mtv.x != 0) {
+        velocity.x = 0.0f;
+    }
 }
