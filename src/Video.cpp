@@ -36,7 +36,7 @@ bool Video::initWindow() {
         return false;
     }
 
-    window = SDL_CreateWindow("Test Window", window_width, window_height, 0);
+    window = SDL_CreateWindow("Speedrunner", window_width, window_height, 0);
     if (!window) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to init window: %s", SDL_GetError());
         return false;
@@ -97,16 +97,7 @@ bool Video::initGraphics() {
     // Load static info into buffers
     loadMeshes();
 
-    SDL_GPUTextureCreateInfo intermediateInfo;
-    intermediateInfo.format = SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM;
-    intermediateInfo.usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER;
-    intermediateInfo.width = window_width;
-    intermediateInfo.height = window_height;
-    intermediateInfo.layer_count_or_depth = 1;
-    intermediateInfo.num_levels = 1;
-    intermediateInfo.sample_count = SDL_GPU_SAMPLECOUNT_1;
-    intermediates[0] = SDL_CreateGPUTexture(gpuDevice, &intermediateInfo);
-    intermediates[1] = SDL_CreateGPUTexture(gpuDevice, &intermediateInfo);
+    initIntermediateTextures();
 
     return true;
 }
@@ -236,11 +227,20 @@ void Video::loadMeshes() {
     SDL_ReleaseGPUTransferBuffer(gpuDevice, transfer);
 }
 
-void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<RenderInfo> &objects) {
-    SDL_GPUViewport viewport = {};
-    viewport.w = window_width;
-    viewport.h = window_height;
+void Video::initIntermediateTextures() {
+    SDL_GPUTextureCreateInfo intermediateInfo;
+    intermediateInfo.format = SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM;
+    intermediateInfo.usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER;
+    intermediateInfo.width = window_width;
+    intermediateInfo.height = window_height;
+    intermediateInfo.layer_count_or_depth = 1;
+    intermediateInfo.num_levels = 1;
+    intermediateInfo.sample_count = SDL_GPU_SAMPLECOUNT_1;
+    intermediates[0] = SDL_CreateGPUTexture(gpuDevice, &intermediateInfo);
+    intermediates[1] = SDL_CreateGPUTexture(gpuDevice, &intermediateInfo);
+}
 
+void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<RenderInfo> &objects) {
     SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(gpuDevice);
 
     int i = frameIndex % 3;
@@ -301,9 +301,24 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     bindings[0].buffer = vertexBuffer;
     bindings[1].buffer = miscBuffer;
     bindings[2].buffer = indexBuffer;
-    colors.load_op = SDL_GPU_LOADOP_LOAD;
+    colors.load_op = SDL_GPU_LOADOP_CLEAR;
     colors.store_op = SDL_GPU_STOREOP_STORE;
     colors.clear_color = {0, 0, 0, 1};
+
+    SDL_GPUViewport viewport = {};
+    viewport.w = window_width;
+    viewport.h = window_height;
+
+    SDL_GPUTexture* swapchain;
+    SDL_WaitAndAcquireGPUSwapchainTexture(cmd, window, &swapchain, &window_width, &window_height);
+
+    if (window_width != viewport.w || window_height != viewport.h) {
+        SDL_ReleaseGPUTexture(gpuDevice, intermediates[0]);
+        SDL_ReleaseGPUTexture(gpuDevice, intermediates[1]);
+        initIntermediateTextures();
+        viewport.w = window_width;
+        viewport.h = window_height;
+    };
 
 
     // Objects Pass
@@ -322,31 +337,28 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
 
 
     // Post-Processing Passes
-    SDL_GPUSamplerCreateInfo samplerInfo = {};
-    SDL_GPUTextureSamplerBinding samplerBinding = {};
-    samplerInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-    samplerInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    // SDL_GPUSamplerCreateInfo samplerInfo = {};
+    // SDL_GPUTextureSamplerBinding samplerBinding = {};
+    // samplerInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    // samplerInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    //
+    // SDL_GPUSampler* sampler = SDL_CreateGPUSampler(gpuDevice, &samplerInfo);
+    // samplerBinding.sampler = sampler;
+    //
+    // samplerBinding.texture = intermediates[currentIntermediate];
+    // currentIntermediate = (currentIntermediate + 1) % 2;
+    // colors.texture = intermediates[currentIntermediate];
+    //
+    // render = SDL_BeginGPURenderPass(cmd, &colors, 1, NULL);
+    // SDL_BindGPUGraphicsPipeline(render, conwayPipeline);
+    // SDL_SetGPUViewport(render, &viewport);
+    //
+    // SDL_BindGPUVertexBuffers(render, 0, bindings, 1);
+    // SDL_BindGPUIndexBuffer(render, bindings + 2, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+    // SDL_BindGPUFragmentSamplers(render, 0, &samplerBinding, 1);
+    // SDL_DrawGPUIndexedPrimitives(render, 6, 1, 0, 0, 0);
+    // SDL_EndGPURenderPass(render);
 
-    SDL_GPUSampler* sampler = SDL_CreateGPUSampler(gpuDevice, &samplerInfo);
-    samplerBinding.sampler = sampler;
-
-    samplerBinding.texture = intermediates[currentIntermediate];
-    currentIntermediate = (currentIntermediate + 1) % 2;
-    colors.texture = intermediates[currentIntermediate];
-
-    render = SDL_BeginGPURenderPass(cmd, &colors, 1, NULL);
-    SDL_BindGPUGraphicsPipeline(render, conwayPipeline);
-    SDL_SetGPUViewport(render, &viewport);
-
-    SDL_BindGPUVertexBuffers(render, 0, bindings, 1);
-    SDL_BindGPUIndexBuffer(render, bindings + 2, SDL_GPU_INDEXELEMENTSIZE_32BIT);
-    SDL_BindGPUFragmentSamplers(render, 0, &samplerBinding, 1);
-    SDL_DrawGPUIndexedPrimitives(render, 6, 1, 0, 0, 0);
-    SDL_EndGPURenderPass(render);
-
-
-    SDL_GPUTexture* swapchain;
-    SDL_WaitAndAcquireGPUSwapchainTexture(cmd, window, &swapchain, &window_width, &window_height);
 
     SDL_GPUTextureLocation src = {};
     SDL_GPUTextureLocation dst = {};

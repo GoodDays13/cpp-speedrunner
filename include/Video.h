@@ -64,5 +64,6 @@ private:
     bool initGraphics();
     void createPipeline();
     void loadMeshes();
+    void initIntermediateTextures();
     void cleanup();
 };
