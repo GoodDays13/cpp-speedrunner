@@ -7,6 +7,12 @@
 
 #include "math.h"
 
+#define SHADER_VERTEX shaders[0]
+#define SHADER_FRAGMENT shaders[1]
+#define SHADER_FULLSCREEN shaders[2]
+#define SHADER_BOXBLUR shaders[3]
+#define SHADER_CONWAY shaders[4]
+
 using MeshHandle = unsigned int;
 
 class Video {
@@ -31,6 +37,7 @@ public:
 private:
     struct Vertex {
         Vector2 position;
+        Vector2 uv;
     };
     struct IndexTriangle {
         unsigned int a;
@@ -40,9 +47,12 @@ private:
 
     SDL_Window* window;
     SDL_GPUDevice* gpuDevice;
-    SDL_GPUShader* vertexShader;
-    SDL_GPUShader* fragmentShader;
+    SDL_GPUShader* shaders[5];
     SDL_GPUGraphicsPipeline* graphicsPipeline;
+    SDL_GPUGraphicsPipeline* boxBlurPipeline;
+    SDL_GPUGraphicsPipeline* conwayPipeline;
+    SDL_GPUTexture* intermediates[2];
+    unsigned int currentIntermediate;
     SDL_GPUBuffer* vertexBuffer;
     SDL_GPUBuffer* indexBuffer;
     SDL_GPUBuffer* miscBuffer;

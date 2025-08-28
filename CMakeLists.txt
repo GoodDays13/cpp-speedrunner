@@ -12,6 +12,9 @@ option(SDL3_STATIC "Static link SDL3" OFF)
 set(SHADER_SOURCES
     ${CMAKE_SOURCE_DIR}/assets/shaders/vertex.vert
     ${CMAKE_SOURCE_DIR}/assets/shaders/fragment.frag
+    ${CMAKE_SOURCE_DIR}/assets/shaders/fullscreen.vert
+    ${CMAKE_SOURCE_DIR}/assets/shaders/boxblur.frag
+    ${CMAKE_SOURCE_DIR}/assets/shaders/conway.frag
 )
 
 set(GENERATED_HEADERS "")

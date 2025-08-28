@@ -1,2 +1,5 @@
 #include "vertex.vert.h"
 #include "fragment.frag.h"
+#include "fullscreen.vert.h"
+#include "boxblur.frag.h"
+#include "conway.frag.h"

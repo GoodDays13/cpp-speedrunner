@@ -27,7 +27,7 @@ bool Game::initialize() {
 };
 
 void Game::run() {
-    const Uint64 frameDelay = 1000000000ULL / (framerateLimit > 0 ? framerateLimit : 60);
+    const Uint64 frameDelay = framerateLimit > 0 ? 1000000000ULL / framerateLimit : 0;
     lastFrameTime = SDL_GetTicksNS();
     isRunning = true;
     while (isRunning) {
