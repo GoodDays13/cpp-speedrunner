@@ -71,13 +71,7 @@ void Game::update(float deltaTime) {
         if (objects[i] == player)
             continue;
         Vector2 mtv = player->computeMTV(*objects[i]);
-        player->position += mtv;
-        if (mtv.y > 0) {
-            player->coyoteTimer = player->coyoteTime;
-            player->velocity.y = std::max(player->velocity.y, 0.0f);
-        } else if (mtv.y < 0) {
-            player->velocity.y = std::min(player->velocity.y, 0.0f);
-        }
+        player->handleMTV(mtv);
     }
 
     cameraPosition += (player->position - cameraPosition) * 5.0f * deltaTime;

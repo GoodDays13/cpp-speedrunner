@@ -16,5 +16,6 @@ public:
     virtual void handleEvent(const SDL_Event& event);
 
     Vector2 computeMTV(const GameObject& other);
+    virtual void handleMTV(Vector2 mtv);
 };
 

@@ -29,3 +29,5 @@ Vector2 GameObject::computeMTV(const GameObject& other) {
         return {0, dy < 0 ? py : -py};
     }
 }
+
+void GameObject::handleMTV(Vector2 mtv) {};
