@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 struct Vector2 {
     float x;
     float y;
@@ -19,11 +21,30 @@ struct Vector2 {
         return {x * scalar, y * scalar};
     }
 
+    // Scale by a scalar
+    Vector2 operator/(float scalar) const {
+        return {x / scalar, y / scalar};
+    }
+
     // Compound assignment
     Vector2& operator+=(const Vector2& other) {
         x += other.x;
         y += other.y;
         return *this;
+    }
+
+    Vector2& operator-=(const Vector2& other) {
+        x -= other.x;
+        y -= other.y;
+        return *this;
+    }
+
+    bool operator==(const Vector2& other) const {
+        return this->x == other.x && this->y == other.y;
+    }
+
+    float dot(const Vector2& other) const {
+        return x * other.x + y * other.y;
     }
 };
 
@@ -39,3 +60,6 @@ struct Vector4 {
     float z;
     float w;
 };
+
+static_assert(sizeof(Vector2) == sizeof(float) * 2, "Vector2 must be exactly 2 floats");
+static_assert(std::is_trivial_v<Vector2>, "Vector2 must be trivial for graphics compatibility");

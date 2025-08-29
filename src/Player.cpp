@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Game.h"
+#include <SDL3/SDL_log.h>
 #include <cmath>
 #include <optional>
 
@@ -65,25 +66,24 @@ void Player::update(float deltaTime) {
         }
     }
 
-    std::optional<Collision> collision = std::nullopt;
-    if (game) {
-        collision = game->checkCollisions(this);
-    }
-    if (collision && collision->time < deltaTime) {
-        position += velocity * collision->time;
-        if (collision->normal.y > 0) {
-            coyoteTimer = coyoteTime;
-            velocity.y = std::max(velocity.y, 0.0f);
-        } else if (collision->normal.y < 0) {
-            velocity.y = std::min(velocity.y, 0.0f);
-            jumpTimer = 0.0f;
+    float remainingTime = deltaTime;
+    while (remainingTime > 0.0f) {
+        std::optional<Collision> collision = std::nullopt;
+        if (game) {
+            collision = game->checkCollisions(this);
         }
-        if (collision->normal.x != 0) {
-            velocity.x = 0.0f;
+        if (collision && collision->time < remainingTime) {
+            position += velocity * collision->time;
+            remainingTime -= collision->time;
+            if (collision->normal.y < 0) {
+                jumpTimer = 0.0f;
+            }
+            velocity -= collision->normal * collision->normal.dot(velocity);
+            touching.push_back(*collision);
+        } else {
+            position += velocity * remainingTime;
+            remainingTime = 0.0f;
         }
-        touching.push_back(*collision);
-    } else {
-        position += velocity * deltaTime;
     }
 
     if (position.y < -20.0f) {
