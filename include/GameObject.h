@@ -2,6 +2,7 @@
 
 #include "math.h"
 #include <SDL3/SDL_events.h>
+#include <memory>
 
 class Game;
 
@@ -27,7 +28,7 @@ public:
 };
 
 struct Collision {
-    GameObject* other;
+    std::weak_ptr<GameObject> other;
     Vector2 normal;
     float time;
 };

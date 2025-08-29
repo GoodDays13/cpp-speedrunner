@@ -48,7 +48,8 @@ void Player::update(float deltaTime) {
     }
 
     for (int i = 0; i < touching.size(); i++) {
-        if (!isTouching(*touching[i].other)) {
+        auto other = touching[i].other.lock();
+        if (!other || !isTouching(*other)) {
             touching.erase(touching.begin() + i);
             i--;
             continue;
@@ -70,7 +71,7 @@ void Player::update(float deltaTime) {
     while (remainingTime > 0.0f) {
         std::optional<Collision> collision = std::nullopt;
         if (game) {
-            collision = game->checkCollisions(this);
+            collision = game->checkCollisions(*this);
         }
         if (collision && collision->time < remainingTime) {
             position += velocity * collision->time;
