@@ -10,11 +10,7 @@
 #include "Video.h"
 #include "shaders.h"
 
-Video::Video() {
-    window_width = 1280;
-    window_height = 720;
-    currentIntermediate = 0;
-}
+Video::Video() : window_width(1280), window_height(720) {}
 
 Video::~Video() {
     cleanup();
@@ -183,9 +179,6 @@ void Video::loadMeshes() {
     miscTransferBuffers[0] = SDL_CreateGPUTransferBuffer(gpuDevice, &miscTransferInfo);
     miscTransferBuffers[1] = SDL_CreateGPUTransferBuffer(gpuDevice, &miscTransferInfo);
     miscTransferBuffers[2] = SDL_CreateGPUTransferBuffer(gpuDevice, &miscTransferInfo);
-    inFlightFrames[0] = nullptr;
-    inFlightFrames[1] = nullptr;
-    inFlightFrames[2] = nullptr;
 
     SDL_GPUTransferBufferCreateInfo transferInfo = {};
     transferInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
@@ -389,6 +382,7 @@ void Video::cleanup() {
     SDL_ReleaseGPUBuffer(gpuDevice, vertexBuffer);
     SDL_ReleaseGPUGraphicsPipeline(gpuDevice, graphicsPipeline);
     SDL_ReleaseGPUGraphicsPipeline(gpuDevice, boxBlurPipeline);
+    SDL_ReleaseGPUGraphicsPipeline(gpuDevice, conwayPipeline);
     for (int i = 0; i < sizeof(shaders) / sizeof(shaders[0]); i++)
         SDL_ReleaseGPUShader(gpuDevice, shaders[i]);
     for (int i = 0; i < 2; i++)

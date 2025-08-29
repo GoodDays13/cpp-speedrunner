@@ -52,12 +52,12 @@ private:
     SDL_GPUGraphicsPipeline* boxBlurPipeline;
     SDL_GPUGraphicsPipeline* conwayPipeline;
     SDL_GPUTexture* intermediates[2];
-    unsigned int currentIntermediate;
+    unsigned int currentIntermediate = 0;
     SDL_GPUBuffer* vertexBuffer;
     SDL_GPUBuffer* indexBuffer;
     SDL_GPUBuffer* miscBuffer;
     SDL_GPUTransferBuffer* miscTransferBuffers[3];
-    SDL_GPUFence* inFlightFrames[3];
+    SDL_GPUFence* inFlightFrames[3] = {nullptr, nullptr, nullptr};
     unsigned int frameIndex = 0;
 
     bool initWindow();

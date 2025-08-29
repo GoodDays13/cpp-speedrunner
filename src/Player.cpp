@@ -1,5 +1,7 @@
 #include "Player.h"
+#include "Game.h"
 #include <cmath>
+#include <optional>
 
 Player::Player() = default;
 
@@ -44,7 +46,46 @@ void Player::update(float deltaTime) {
         velocity.x += accel * (desiredDifference > 0 ? -1 : 1);
     }
 
-    GameObject::update(deltaTime);
+    for (int i = 0; i < touching.size(); i++) {
+        if (!isTouching(*touching[i].other)) {
+            touching.erase(touching.begin() + i);
+            i--;
+            continue;
+        }
+        if (touching[i].normal.y > 0) {
+            coyoteTimer = coyoteTime;
+            velocity.y = std::max(velocity.y, 0.0f);
+        } else if (touching[i].normal.y < 0) {
+            velocity.y = std::min(velocity.y, 0.0f);
+        }
+        if (touching[i].normal.x > 0) {
+            velocity.x = std::max(velocity.x, 0.0f);
+        } else if (touching[i].normal.x < 0) {
+            velocity.x = std::min(velocity.x, 0.0f);
+        }
+    }
+
+    std::optional<Collision> collision = std::nullopt;
+    if (game) {
+        collision = game->checkCollisions(this);
+    }
+    if (collision && collision->time < deltaTime) {
+        position += velocity * collision->time;
+        if (collision->normal.y > 0) {
+            coyoteTimer = coyoteTime;
+            velocity.y = std::max(velocity.y, 0.0f);
+        } else if (collision->normal.y < 0) {
+            velocity.y = std::min(velocity.y, 0.0f);
+            jumpTimer = 0.0f;
+        }
+        if (collision->normal.x != 0) {
+            velocity.x = 0.0f;
+        }
+        touching.push_back(*collision);
+    } else {
+        position += velocity * deltaTime;
+    }
+
     if (position.y < -20.0f) {
         position = {0.0f, 0.0f};
         velocity.y = 0.0f;
