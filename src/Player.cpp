@@ -47,25 +47,6 @@ void Player::update(float deltaTime) {
         velocity.x += accel * (desiredDifference > 0 ? -1 : 1);
     }
 
-    for (int i = 0; i < touching.size(); i++) {
-        auto other = touching[i].other.lock();
-        if (!other || !isTouching(*other)) {
-            touching.erase(touching.begin() + i);
-            i--;
-            continue;
-        }
-        if (touching[i].normal.y > 0) {
-            coyoteTimer = coyoteTime;
-            velocity.y = std::max(velocity.y, 0.0f);
-        } else if (touching[i].normal.y < 0) {
-            velocity.y = std::min(velocity.y, 0.0f);
-        }
-        if (touching[i].normal.x > 0) {
-            velocity.x = std::max(velocity.x, 0.0f);
-        } else if (touching[i].normal.x < 0) {
-            velocity.x = std::min(velocity.x, 0.0f);
-        }
-    }
 
     float remainingTime = deltaTime;
     while (remainingTime > 0.0f) {
@@ -78,9 +59,10 @@ void Player::update(float deltaTime) {
             remainingTime -= collision->time;
             if (collision->normal.y < 0) {
                 jumpTimer = 0.0f;
+            } else if (collision->normal.y > 0) {
+                coyoteTimer = coyoteTime;
             }
             velocity -= collision->normal * collision->normal.dot(velocity);
-            touching.push_back(*collision);
         } else {
             position += velocity * remainingTime;
             remainingTime = 0.0f;

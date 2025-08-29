@@ -46,6 +46,12 @@ struct Vector2 {
     float dot(const Vector2& other) const {
         return x * other.x + y * other.y;
     }
+
+    float distanceSquared(const Vector2& other) const {
+        float dx = x - other.x;
+        float dy = y - other.y;
+        return dx * dx + dy * dy;
+    }
 };
 
 struct Vector3 {

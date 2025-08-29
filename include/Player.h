@@ -2,7 +2,6 @@
 
 #include "GameObject.h"
 #include <SDL3/SDL_events.h>
-#include <vector>
 
 class Player : public GameObject {
 private:
@@ -16,7 +15,6 @@ private:
     const float jumpTime = 0.4f;
     float jumpTimer = 0.0f;
     Vector2 input = {0, 0};
-    std::vector<Collision> touching;
 public:
     Player();
     Player(Game* game) : GameObject(game) {}

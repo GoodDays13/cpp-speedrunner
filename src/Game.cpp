@@ -160,15 +160,41 @@ std::optional<Collision> Game::checkCollisions(const GameObject& obj) {
         collisions.push_back(collision);
     }
 
+
     if (collisions.size() == 0)
         return std::nullopt;
 
-    int min = 0;
-    for (int i = 1; i < collisions.size(); i++)
-        if (collisions[i].time < collisions[min].time) min = i;
+    // Find the earliest collision
+    Collision& min = collisions[0];
+    std::vector<Collision> minTies;
+    for (Collision& c : collisions) {
+        if (c.time < min.time) {
+            min = c;
+            minTies.clear();
+        }
+        if (c.time == min.time) {
+            minTies.push_back(c);
+        }
+    }
 
 
-    return collisions[min];
+    // If there's no tie, return the earliest collision
+    if (minTies.size() <= 1)
+        return min;
+
+    // Break ties by choosing the collision with the object closest to the main object
+    Collision& closest = minTies[0];
+    for (Collision& c : minTies) {
+        if (auto other = c.other.lock()) {
+            if (auto closestOther = closest.other.lock()) {
+                if (other->position.distanceSquared(obj.position) < closestOther->position.distanceSquared(obj.position)) {
+                    closest = c;
+                }
+            }
+        }
+    }
+
+    return closest;
 }
 
 std::vector<std::weak_ptr<GameObject>> Game::findObjectsAtCoords(Vector2 pos) {
