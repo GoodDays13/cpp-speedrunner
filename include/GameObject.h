@@ -17,6 +17,8 @@ public:
     Vector2 scale;
     Vector2 velocity;
 
+    Vector4 color;
+
     virtual void update(float deltaTime);
 
     virtual void handleEvent(const SDL_Event& event);

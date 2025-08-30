@@ -4,8 +4,10 @@ layout(location = 0) in vec2 position;
 layout(location = 1) in vec2 uv;
 layout(location = 2) in vec2 model_position;
 layout(location = 3) in vec2 model_scale;
+layout(location = 4) in vec4 color;
 
 layout(location = 0) out vec2 fragUV;
+layout(location = 1) out vec4 fragColor;
 
 layout(set = 1, binding = 0) uniform Camera {
     mat4 view;
@@ -22,4 +24,5 @@ void main() {
     pos = camera.view * model * pos;
     gl_Position = pos;
     fragUV = uv;
+    fragColor = color;
 }

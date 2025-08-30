@@ -105,8 +105,8 @@ void Video::createPipeline() {
 
     SDL_GPUVertexBufferDescription vertex_buffer_descriptions[2] = {};
     pipelineinfo.vertex_input_state.num_vertex_buffers = 2;
-    SDL_GPUVertexAttribute vertex_attributes[4] = {};
-    pipelineinfo.vertex_input_state.num_vertex_attributes = 4;
+    SDL_GPUVertexAttribute vertex_attributes[5] = {};
+    pipelineinfo.vertex_input_state.num_vertex_attributes = 5;
     pipelineinfo.vertex_input_state.vertex_buffer_descriptions = vertex_buffer_descriptions;
     pipelineinfo.vertex_input_state.vertex_attributes = vertex_attributes;
 
@@ -124,7 +124,7 @@ void Video::createPipeline() {
 
     // misc instance buffer
     vertex_buffer_descriptions[1].slot = 1;
-    vertex_buffer_descriptions[1].pitch = sizeof(Vector2) * 2;
+    vertex_buffer_descriptions[1].pitch = sizeof(Vector2) * 2 + sizeof(Vector4);
     vertex_buffer_descriptions[1].input_rate = SDL_GPU_VERTEXINPUTRATE_INSTANCE;
     vertex_attributes[2].location = 2;
     vertex_attributes[2].buffer_slot = 1;
@@ -133,6 +133,10 @@ void Video::createPipeline() {
     vertex_attributes[3].buffer_slot = 1;
     vertex_attributes[3].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
     vertex_attributes[3].offset = sizeof(Vector2);
+    vertex_attributes[4].location = 4;
+    vertex_attributes[4].buffer_slot = 1;
+    vertex_attributes[4].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4;
+    vertex_attributes[4].offset = sizeof(Vector2) * 2;
 
     pipelineinfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
 
@@ -246,12 +250,11 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     SDL_GPUTransferBuffer* miscTransferBuffer = miscTransferBuffers[i];
 
     void* miscMap = SDL_MapGPUTransferBuffer(gpuDevice, miscTransferBuffer, false);
-    Vector2* vectorData = (Vector2*)miscMap;
+    MiscData* instanceData = (MiscData*)miscMap;
 
     // TODO: Add detection for overflow of buffer
     for (int i = 0; i < objects.size(); i++) {
-        vectorData[2 * i] = objects[i].position;
-        vectorData[2 * i + 1] = objects[i].scale;
+        instanceData[i] = objects[i].data;
     }
 
     SDL_UnmapGPUTransferBuffer(gpuDevice, miscTransferBuffer);
@@ -262,7 +265,7 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     miscSrc.transfer_buffer = miscTransferBuffer;
     SDL_GPUBufferRegion miscDst = {};
     miscDst.buffer = miscBuffer;
-    miscDst.size = sizeof(Vector2) * 2 * objects.size();
+    miscDst.size = sizeof(MiscData) * objects.size();
 
     SDL_UploadToGPUBuffer(copypass, &miscSrc, &miscDst, false);
 

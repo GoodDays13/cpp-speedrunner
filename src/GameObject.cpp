@@ -1,7 +1,7 @@
 #include "GameObject.h"
 #include <cstdlib>
 
-GameObject::GameObject() : position({}), scale({1, 1}), velocity({}) {}
+GameObject::GameObject() : position({}), scale({1, 1}), velocity({}), color({1, 1, 1, 1}) {}
 GameObject::GameObject(Game* game) : GameObject() {
     this->game = game;
 }

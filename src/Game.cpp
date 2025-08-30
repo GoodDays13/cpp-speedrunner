@@ -22,6 +22,7 @@ bool Game::initialize() {
     timeSpeed = 1.0f;
 
     auto playerPtr = std::make_shared<Player>(this);
+    playerPtr->color = {1, 0, 0, 1};
 
     player = playerPtr;
 
@@ -96,7 +97,7 @@ void Game::update(float deltaTime) {
 void Game::render() {
     std::vector<Video::RenderInfo> infos;
     for (int i = 0; i < objects.size(); i++) {
-        infos.push_back({Video::SQUARE, objects[i]->position, objects[i]->scale});
+        infos.push_back({Video::SQUARE, objects[i]->position, objects[i]->scale, objects[i]->color});
     }
     video.render(cameraPosition, {16, 9}, infos);
 }

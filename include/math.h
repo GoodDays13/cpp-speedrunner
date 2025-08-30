@@ -69,3 +69,7 @@ struct Vector4 {
 
 static_assert(sizeof(Vector2) == sizeof(float) * 2, "Vector2 must be exactly 2 floats");
 static_assert(std::is_trivial_v<Vector2>, "Vector2 must be trivial for graphics compatibility");
+static_assert(sizeof(Vector3) == sizeof(float) * 3, "Vector3 must be exactly 3 floats");
+static_assert(std::is_trivial_v<Vector3>, "Vector3 must be trivial for graphics compatibility");
+static_assert(sizeof(Vector4) == sizeof(float) * 4, "Vector4 must be exactly 4 floats");
+static_assert(std::is_trivial_v<Vector4>, "Vector4 must be trivial for graphics compatibility");

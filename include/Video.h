@@ -20,10 +20,14 @@ public:
     enum Model {
         SQUARE
     };
-    struct RenderInfo {
-        Model model;
+    struct MiscData {
         Vector2 position;
         Vector2 scale;
+        Vector4 color;
+    };
+    struct RenderInfo {
+        Model model;
+        MiscData data;
     };
 
     unsigned int window_width;
