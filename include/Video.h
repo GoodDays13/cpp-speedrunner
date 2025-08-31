@@ -18,7 +18,7 @@ using MeshHandle = unsigned int;
 class Video {
 public:
     enum Model {
-        SQUARE
+        QUAD
     };
     struct MiscData {
         Transform transform;
@@ -70,8 +70,9 @@ private:
 
     bool initWindow();
     bool initGraphics();
+    void loadShaders();
     void createPipeline();
-    void loadMeshes();
+    void createBuffersAndGeometry();
     void initIntermediateTextures();
     void cleanup();
 };

@@ -53,6 +53,20 @@ bool Video::initGraphics() {
         SDL_SetGPUSwapchainParameters(gpuDevice, window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_MAILBOX);
 
     // Load shaders
+    loadShaders();
+
+    // Create graphics pipeline
+    createPipeline();
+
+    // Load static info into buffers
+    createBuffersAndGeometry();
+
+    initIntermediateTextures();
+
+    return true;
+}
+
+void Video::loadShaders() {
     SDL_GPUShaderCreateInfo shader_info = {};
     shader_info.code_size = vertex_vert_spv_len;
     shader_info.code = vertex_vert_spv;
@@ -86,16 +100,6 @@ bool Video::initGraphics() {
     shader_info.code = conway_frag_spv;
 
     SHADER_CONWAY = SDL_CreateGPUShader(gpuDevice, &shader_info);
-
-    // Create graphics pipeline
-    createPipeline();
-
-    // Load static info into buffers
-    loadMeshes();
-
-    initIntermediateTextures();
-
-    return true;
 }
 
 void Video::createPipeline() {
@@ -159,7 +163,8 @@ void Video::createPipeline() {
     conwayPipeline = SDL_CreateGPUGraphicsPipeline(gpuDevice, &pipelineinfo);
 }
 
-void Video::loadMeshes() {
+void Video::createBuffersAndGeometry() {
+    // Set up buffer settings
     SDL_GPUBufferCreateInfo vertexInfo = {};
     SDL_GPUBufferCreateInfo indexInfo = {};
     SDL_GPUBufferCreateInfo miscInfo = {};
@@ -177,6 +182,7 @@ void Video::loadMeshes() {
     miscTransferInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
     miscTransferInfo.size = std::pow(2, 20);
 
+    // Create the buffers
     vertexBuffer = SDL_CreateGPUBuffer(gpuDevice, &vertexInfo);
     indexBuffer = SDL_CreateGPUBuffer(gpuDevice, &indexInfo);
     miscBuffer = SDL_CreateGPUBuffer(gpuDevice, &miscInfo);
@@ -184,6 +190,8 @@ void Video::loadMeshes() {
     miscTransferBuffers[1] = SDL_CreateGPUTransferBuffer(gpuDevice, &miscTransferInfo);
     miscTransferBuffers[2] = SDL_CreateGPUTransferBuffer(gpuDevice, &miscTransferInfo);
 
+
+    // Upload static vertex data
     SDL_GPUTransferBufferCreateInfo transferInfo = {};
     transferInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
     transferInfo.size = vertexInfo.size + indexInfo.size;
@@ -205,6 +213,7 @@ void Video::loadMeshes() {
     Vertex* vertexMap = (Vertex*)map;
     IndexTriangle* indexMap = (IndexTriangle*)((char*)map + indexSrc.offset);
 
+    // Basic quad
     vertexMap[0] = {{-.5, -.5}, {0, 1}};
     vertexMap[1] = {{.5, -.5}, {1, 1}};
     vertexMap[2] = {{-.5, .5}, {0, 0}};

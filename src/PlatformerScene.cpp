@@ -65,7 +65,7 @@ void PlatformerScene::update(float deltaTime) {
 Video::RenderInfo PlatformerScene::render() {
     Video::RenderInfo info;
     for (int i = 0; i < objects.size(); i++) {
-        info.instances.push_back({Video::SQUARE, objects[i]->transform, objects[i]->color});
+        info.instances.push_back({Video::QUAD, objects[i]->transform, objects[i]->color});
     }
     info.camera = camera;
     return info;
