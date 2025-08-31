@@ -28,6 +28,6 @@ public:
 private:
     std::vector<std::shared_ptr<GameObject>> objects;
     std::weak_ptr<Player> player;
-    Vector2 cameraPosition = {0, 0};
+    Transform camera;
     float timeSpeed = 1.0f;
 };

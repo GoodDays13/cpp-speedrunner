@@ -67,6 +67,11 @@ struct Vector4 {
     float w;
 };
 
+struct Transform {
+    Vector2 position;
+    Vector2 scale;
+};
+
 static_assert(sizeof(Vector2) == sizeof(float) * 2, "Vector2 must be exactly 2 floats");
 static_assert(std::is_trivial_v<Vector2>, "Vector2 must be trivial for graphics compatibility");
 static_assert(sizeof(Vector3) == sizeof(float) * 3, "Vector3 must be exactly 3 floats");

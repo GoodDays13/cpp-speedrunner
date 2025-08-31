@@ -21,8 +21,7 @@ public:
         SQUARE
     };
     struct MiscData {
-        Vector2 position;
-        Vector2 scale;
+        Transform transform;
         Vector4 color;
     };
     struct InstanceInfo {
@@ -31,8 +30,7 @@ public:
     };
     struct RenderInfo {
         std::vector<InstanceInfo> instances;
-        Vector2 cameraPosition;
-        Vector2 cameraScale;
+        Transform camera;
     };
 
     Video();
@@ -40,7 +38,7 @@ public:
     bool initialize();
     void render(RenderInfo info);
     const SDL_DisplayMode* getDisplayMode() const;
-    Vector2 convertPixelToGame(Vector2 pixel, Vector2 cameraPos, Vector2 cameraScale) const;
+    Vector2 convertPixelToGame(Vector2 pixel, Transform camera) const;
 private:
     struct Vertex {
         Vector2 position;

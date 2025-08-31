@@ -15,6 +15,8 @@
 void PlatformerScene::initialize() {
     timeSpeed = 1.0f;
 
+    camera = {{0, 0}, {16, 9}};
+
     auto playerPtr = std::make_shared<Player>(this);
     playerPtr->color = {1, 0, 0, 1};
 
@@ -23,20 +25,19 @@ void PlatformerScene::initialize() {
     objects.push_back(playerPtr);
 
     auto floor = std::make_shared<GameObject>(this);
-    floor->position = {-8, -4};
-    floor->scale = {17, 1};
+    floor->transform = {{-8, -4}, {17, 1}};
     objects.push_back(floor);
 };
 
 void PlatformerScene::handleEvent(SDL_Event event, const Video& video) {
     if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
-        Vector2 position = video.convertPixelToGame({event.button.x, event.button.y}, cameraPosition, {16, 9});
+        Vector2 position = video.convertPixelToGame({event.button.x, event.button.y}, camera);
         position.x = std::round(position.x);
         position.y = std::round(position.y);
         auto things = findObjectsAtCoords(position);
         if (things.size() == 0) {
             auto obj = createGameObject();
-            obj.lock()->position = position;
+            obj.lock()->transform.position = position;
         } else {
             destroyGameObject(things[0]);
         }
@@ -58,16 +59,15 @@ void PlatformerScene::update(float deltaTime) {
     }
 
     if (auto p = player.lock())
-        cameraPosition += (p->position - cameraPosition) * 5.0f * std::min(deltaTime, 0.2f);
+        camera.position += (p->transform.position - camera.position) * 5.0f * std::min(deltaTime, 0.2f);
 }
 
 Video::RenderInfo PlatformerScene::render() {
     Video::RenderInfo info;
     for (int i = 0; i < objects.size(); i++) {
-        info.instances.push_back({Video::SQUARE, objects[i]->position, objects[i]->scale, objects[i]->color});
+        info.instances.push_back({Video::SQUARE, objects[i]->transform, objects[i]->color});
     }
-    info.cameraPosition = cameraPosition;
-    info.cameraScale = {16, 9};
+    info.camera = camera;
     return info;
 }
 
@@ -79,37 +79,37 @@ std::optional<Collision> PlatformerScene::checkCollisions(const GameObject& obj)
         if (other.get() == &obj)
             continue;
 
-        float left = other->position.x - other->scale.x / 2 - obj.scale.x / 2;
-        float right = other->position.x + other->scale.x / 2 + obj.scale.x / 2;
-        float bottom = other->position.y - other->scale.y / 2 - obj.scale.y / 2;
-        float top = other->position.y + other->scale.y / 2 + obj.scale.y / 2;
+        float left = other->transform.position.x - other->transform.scale.x / 2 - obj.transform.scale.x / 2;
+        float right = other->transform.position.x + other->transform.scale.x / 2 + obj.transform.scale.x / 2;
+        float bottom = other->transform.position.y - other->transform.scale.y / 2 - obj.transform.scale.y / 2;
+        float top = other->transform.position.y + other->transform.scale.y / 2 + obj.transform.scale.y / 2;
 
         if (obj.velocity.x == 0.0f) {
-            if (obj.position.x <= left || obj.position.x >= right) {
+            if (obj.transform.position.x <= left || obj.transform.position.x >= right) {
                 continue;
             }
         } else if (obj.velocity.x > 0.0f) {
-            if (obj.position.x >= right)
+            if (obj.transform.position.x >= right)
                 continue;
         } else {
-            if (obj.position.x <= left)
+            if (obj.transform.position.x <= left)
                 continue;
         }
         if (obj.velocity.y == 0.0f) {
-            if (obj.position.y <= bottom || obj.position.y >= top)
+            if (obj.transform.position.y <= bottom || obj.transform.position.y >= top)
                 continue;
         } else if (obj.velocity.y > 0.0f) {
-            if (obj.position.y >= top)
+            if (obj.transform.position.y >= top)
                 continue;
         } else {
-            if (obj.position.y <= bottom)
+            if (obj.transform.position.y <= bottom)
                 continue;
         }
 
-        float xEntry = ((obj.velocity.x >= 0 ? left : right) - obj.position.x) / obj.velocity.x;
-        float xExit =  ((obj.velocity.x >= 0 ? right : left) - obj.position.x) / obj.velocity.x;
-        float yEntry = ((obj.velocity.y >= 0 ? bottom : top) - obj.position.y) / obj.velocity.y;
-        float yExit =  ((obj.velocity.y >= 0 ? top : bottom) - obj.position.y) / obj.velocity.y;
+        float xEntry = ((obj.velocity.x >= 0 ? left : right) - obj.transform.position.x) / obj.velocity.x;
+        float xExit =  ((obj.velocity.x >= 0 ? right : left) - obj.transform.position.x) / obj.velocity.x;
+        float yEntry = ((obj.velocity.y >= 0 ? bottom : top) - obj.transform.position.y) / obj.velocity.y;
+        float yExit =  ((obj.velocity.y >= 0 ? top : bottom) - obj.transform.position.y) / obj.velocity.y;
 
 
         if (xEntry > yExit || yEntry > xExit)
@@ -157,7 +157,7 @@ std::optional<Collision> PlatformerScene::checkCollisions(const GameObject& obj)
     for (Collision& c : minTies) {
         if (auto other = c.other.lock()) {
             if (auto closestOther = closest.other.lock()) {
-                if (other->position.distanceSquared(obj.position) < closestOther->position.distanceSquared(obj.position)) {
+                if (other->transform.position.distanceSquared(obj.transform.position) < closestOther->transform.position.distanceSquared(obj.transform.position)) {
                     closest = c;
                 }
             }
@@ -170,7 +170,7 @@ std::optional<Collision> PlatformerScene::checkCollisions(const GameObject& obj)
 std::vector<std::weak_ptr<GameObject>> PlatformerScene::findObjectsAtCoords(Vector2 pos) {
     std::vector<std::weak_ptr<GameObject>> output;
     for (int i = 0; i < objects.size(); i++) {
-        if (objects[i]->position == pos) {
+        if (objects[i]->transform.position == pos) {
             output.push_back(objects[i]);
         }
     }

@@ -277,10 +277,10 @@ void Video::render(RenderInfo info) {
     // 20x10 viewport centered at 100,100
     // We'll use orthographic projection: left/right/top/bottom = 90/110/-5/5
     // Scale = 2/(right-left), etc.
-    float scaleX = 2.0f / info.cameraScale.x;
-    float scaleY = 2.0f / info.cameraScale.y;
-    float transX = - (info.cameraPosition.x) * scaleX;
-    float transY = - (info.cameraPosition.y) * scaleY;
+    float scaleX = 2.0f / info.camera.scale.x;
+    float scaleY = 2.0f / info.camera.scale.y;
+    float transX = - (info.camera.position.x) * scaleX;
+    float transY = - (info.camera.position.y) * scaleY;
 
     // Column-major mat4
     mapped[0]  = scaleX; mapped[4]  = 0.0f;   mapped[8]  = 0.0f; mapped[12] = transX;
@@ -373,10 +373,10 @@ const SDL_DisplayMode* Video::getDisplayMode() const {
     return SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(window));
 }
 
-Vector2 Video::convertPixelToGame(Vector2 pixel, Vector2 cameraPos, Vector2 cameraScale) const {
+Vector2 Video::convertPixelToGame(Vector2 pixel, Transform camera) const {
     return {
-        (pixel.x / window_width - 0.5f) * cameraScale.x + cameraPos.x,
-        (pixel.y / window_height - 0.5f) * -cameraScale.y + cameraPos.y
+        (pixel.x / window_width - 0.5f) * camera.scale.x + camera.position.x,
+        (pixel.y / window_height - 0.5f) * -camera.scale.y + camera.position.y
     };
 }
 

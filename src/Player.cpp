@@ -55,7 +55,7 @@ void Player::update(float deltaTime) {
             collision = game->checkCollisions(*this);
         }
         if (collision && collision->time < remainingTime) {
-            position += velocity * collision->time;
+            transform.position += velocity * collision->time;
             remainingTime -= collision->time;
             if (collision->normal.y < 0) {
                 jumpTimer = 0.0f;
@@ -64,19 +64,19 @@ void Player::update(float deltaTime) {
             }
             velocity -= collision->normal * collision->normal.dot(velocity);
         } else {
-            position += velocity * remainingTime;
+            transform.position += velocity * remainingTime;
             remainingTime = 0.0f;
         }
     }
 
-    if (position.y < -20.0f) {
-        position = {0.0f, 0.0f};
+    if (transform.position.y < -20.0f) {
+        transform.position = {0.0f, 0.0f};
         velocity.y = 0.0f;
     }
 }
 
 void Player::handleMTV(Vector2 mtv) {
-    position += mtv;
+    transform.position += mtv;
     if (mtv.y > 0) {
         coyoteTimer = coyoteTime;
         velocity.y = std::max(velocity.y, 0.0f);

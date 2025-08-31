@@ -11,8 +11,7 @@ public:
 
     IGameWorld* game = nullptr;
 
-    Vector2 position;
-    Vector2 scale;
+    Transform transform;
     Vector2 velocity;
 
     Vector4 color;
