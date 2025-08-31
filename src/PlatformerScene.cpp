@@ -24,9 +24,12 @@ void PlatformerScene::initialize() {
 
     objects.push_back(playerPtr);
 
-    auto floor = std::make_shared<GameObject>(this);
-    floor->transform = {{-8, -4}, {17, 1}};
-    objects.push_back(floor);
+    for (int x = -50; x <= 50; x++) {
+        for (int y = -1; y >= -50; y--) {
+            auto floor = createGameObject();
+            floor.lock()->transform.position = {static_cast<float>(x), static_cast<float>(y)};
+        }
+    }
 };
 
 void PlatformerScene::handleEvent(SDL_Event event, const Video& video) {
@@ -54,6 +57,7 @@ void PlatformerScene::handleEvent(SDL_Event event, const Video& video) {
 }
 
 void PlatformerScene::update(float deltaTime) {
+    deltaTime *= timeSpeed;
     for (int i = 0; i < objects.size(); i++) {
         objects[i]->update(deltaTime);
     }

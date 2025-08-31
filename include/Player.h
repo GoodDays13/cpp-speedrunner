@@ -16,10 +16,9 @@ private:
     float jumpTimer = 0.0f;
     Vector2 input = {0, 0};
 public:
-    Player();
+    Player() = default;
     Player(IGameWorld* game) : GameObject(game) {}
 
     void handleEvent(const SDL_Event& event) override;
     void update(float deltaTime) override;
-    void handleMTV(Vector2 mtv) override;
 };

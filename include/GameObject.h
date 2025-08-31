@@ -23,5 +23,4 @@ public:
     bool isTouching(const GameObject& other);
 
     Vector2 computeMTV(const GameObject& other);
-    virtual void handleMTV(Vector2 mtv);
 };

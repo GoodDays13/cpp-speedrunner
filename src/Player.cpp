@@ -4,8 +4,6 @@
 #include <cmath>
 #include <optional>
 
-Player::Player() = default;
-
 void Player::handleEvent(const SDL_Event& event) {
     if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
         if (event.key.repeat)
@@ -48,22 +46,36 @@ void Player::update(float deltaTime) {
     }
 
 
+    // Keep track of remaining time to handle multiple collisions in one frame
     float remainingTime = deltaTime;
     while (remainingTime > 0.0f) {
         std::optional<Collision> collision = std::nullopt;
-        if (game) {
+        if (game) { // Sanity check
             collision = game->checkCollisions(*this);
         }
         if (collision && collision->time < remainingTime) {
+            // Move up to the collision
             transform.position += velocity * collision->time;
             remainingTime -= collision->time;
+
+            // Reflect velocity based on collision normal
             if (collision->normal.y < 0) {
-                jumpTimer = 0.0f;
+                jumpTimer = 0.0f; // Cancel jump if hitting head
             } else if (collision->normal.y > 0) {
-                coyoteTimer = coyoteTime;
+                coyoteTimer = coyoteTime; // Reset coyote timer when landing
             }
+            // Remove component of velocity in direction of normal
             velocity -= collision->normal * collision->normal.dot(velocity);
+
+            // Handle any overlap due to floating point precision issues
+            const float padding = 1e-6f;
+            if (fabs(transform.position.x) < padding) {
+                transform.position.x = 0.0f;
+            } if (fabs(transform.position.y) < padding) {
+                transform.position.y = 0.0f;
+            }
         } else {
+            // No collision, move the full remaining time
             transform.position += velocity * remainingTime;
             remainingTime = 0.0f;
         }
@@ -72,19 +84,5 @@ void Player::update(float deltaTime) {
     if (transform.position.y < -20.0f) {
         transform.position = {0.0f, 0.0f};
         velocity.y = 0.0f;
-    }
-}
-
-void Player::handleMTV(Vector2 mtv) {
-    transform.position += mtv;
-    if (mtv.y > 0) {
-        coyoteTimer = coyoteTime;
-        velocity.y = std::max(velocity.y, 0.0f);
-    } else if (mtv.y < 0) {
-        velocity.y = std::min(velocity.y, 0.0f);
-        jumpTimer = 0.0f;
-    }
-    if (mtv.x != 0) {
-        velocity.x = 0.0f;
     }
 }
