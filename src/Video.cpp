@@ -237,7 +237,7 @@ void Video::initIntermediateTextures() {
     intermediates[1] = SDL_CreateGPUTexture(gpuDevice, &intermediateInfo);
 }
 
-void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<RenderInfo> &objects) {
+void Video::render(RenderInfo info) {
     SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(gpuDevice);
 
     int i = frameIndex % 3;
@@ -253,8 +253,8 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     MiscData* instanceData = (MiscData*)miscMap;
 
     // TODO: Add detection for overflow of buffer
-    for (int i = 0; i < objects.size(); i++) {
-        instanceData[i] = objects[i].data;
+    for (int i = 0; i < info.instances.size(); i++) {
+        instanceData[i] = info.instances[i].data;
     }
 
     SDL_UnmapGPUTransferBuffer(gpuDevice, miscTransferBuffer);
@@ -265,7 +265,7 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     miscSrc.transfer_buffer = miscTransferBuffer;
     SDL_GPUBufferRegion miscDst = {};
     miscDst.buffer = miscBuffer;
-    miscDst.size = sizeof(MiscData) * objects.size();
+    miscDst.size = sizeof(MiscData) * info.instances.size();
 
     SDL_UploadToGPUBuffer(copypass, &miscSrc, &miscDst, false);
 
@@ -277,10 +277,10 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     // 20x10 viewport centered at 100,100
     // We'll use orthographic projection: left/right/top/bottom = 90/110/-5/5
     // Scale = 2/(right-left), etc.
-    float scaleX = 2.0f / cameraScale.x;
-    float scaleY = 2.0f / cameraScale.y;
-    float transX = - (cameraPos.x) * scaleX;
-    float transY = - (cameraPos.y) * scaleY;
+    float scaleX = 2.0f / info.cameraScale.x;
+    float scaleY = 2.0f / info.cameraScale.y;
+    float transX = - (info.cameraPosition.x) * scaleX;
+    float transY = - (info.cameraPosition.y) * scaleY;
 
     // Column-major mat4
     mapped[0]  = scaleX; mapped[4]  = 0.0f;   mapped[8]  = 0.0f; mapped[12] = transX;
@@ -327,7 +327,7 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     SDL_BindGPUVertexBuffers(render, 0, bindings, 2);
     SDL_BindGPUIndexBuffer(render, bindings + 2, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 
-    SDL_DrawGPUIndexedPrimitives(render, 6, objects.size(), 0, 0, 0);
+    SDL_DrawGPUIndexedPrimitives(render, 6, info.instances.size(), 0, 0, 0);
 
     SDL_EndGPURenderPass(render);
 
@@ -369,8 +369,15 @@ void Video::render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<Ren
     frameIndex++;
 }
 
-const SDL_DisplayMode* Video::getDisplayMode() {
+const SDL_DisplayMode* Video::getDisplayMode() const {
     return SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(window));
+}
+
+Vector2 Video::convertPixelToGame(Vector2 pixel, Vector2 cameraPos, Vector2 cameraScale) const {
+    return {
+        (pixel.x / window_width - 0.5f) * cameraScale.x + cameraPos.x,
+        (pixel.y / window_height - 0.5f) * -cameraScale.y + cameraPos.y
+    };
 }
 
 void Video::cleanup() {

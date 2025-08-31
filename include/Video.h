@@ -25,19 +25,22 @@ public:
         Vector2 scale;
         Vector4 color;
     };
-    struct RenderInfo {
+    struct InstanceInfo {
         Model model;
         MiscData data;
     };
-
-    unsigned int window_width;
-    unsigned int window_height;
+    struct RenderInfo {
+        std::vector<InstanceInfo> instances;
+        Vector2 cameraPosition;
+        Vector2 cameraScale;
+    };
 
     Video();
     ~Video();
     bool initialize();
-    void render(Vector2 cameraPos, Vector2 cameraScale, const std::vector<RenderInfo> &objects);
-    const SDL_DisplayMode* getDisplayMode();
+    void render(RenderInfo info);
+    const SDL_DisplayMode* getDisplayMode() const;
+    Vector2 convertPixelToGame(Vector2 pixel, Vector2 cameraPos, Vector2 cameraScale) const;
 private:
     struct Vertex {
         Vector2 position;
@@ -48,6 +51,9 @@ private:
         unsigned int b;
         unsigned int c;
     };
+
+    unsigned int window_width;
+    unsigned int window_height;
 
     SDL_Window* window;
     SDL_GPUDevice* gpuDevice;

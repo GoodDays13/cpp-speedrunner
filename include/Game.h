@@ -1,35 +1,22 @@
 #pragma once
 
-#include "GameObject.h"
-#include "Player.h"
+#include "IScene.h"
 #include "Video.h"
-#include <SDL3/SDL_stdinc.h>
 #include <memory>
-#include <optional>
-#include <vector>
 
 class Game {
+private:
+    std::unique_ptr<Video> video;
+    std::vector<std::unique_ptr<IScene>> sceneStack;
+    Uint64 lastFrameTime = 0;
+    float framerateLimit = 0.0f;
+    bool isRunning;
 public:
-    Game();
     bool initialize();
     void run();
     void cleanup();
 
-    std::optional<Collision> checkCollisions(const GameObject& obj);
-    std::vector<std::weak_ptr<GameObject>> findObjectsAtCoords(Vector2 pos);
-    std::weak_ptr<GameObject> createGameObject();
-    void destroyGameObject(const std::weak_ptr<GameObject> obj);
-private:
-    Video video;
-    std::vector<std::shared_ptr<GameObject>> objects;
-    std::weak_ptr<Player> player;
-    Uint64 lastFrameTime = 0;
-    Vector2 cameraPosition = {0, 0};
-    float framerateLimit = 0.0f;
-    float timeSpeed = 1.0f;
-
-    void processInput();
-    void update(float deltaTime);
-    void render();
-    bool isRunning;
+    void pushScene(std::unique_ptr<IScene> scene);
+    void popScene();
+    void switchToScene(std::unique_ptr<IScene> scene);
 };

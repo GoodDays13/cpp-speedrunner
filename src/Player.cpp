@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "Game.h"
+#include "IGameWorld.h"
 #include <SDL3/SDL_log.h>
 #include <cmath>
 #include <optional>

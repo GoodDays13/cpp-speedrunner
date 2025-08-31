@@ -17,7 +17,7 @@ private:
     Vector2 input = {0, 0};
 public:
     Player();
-    Player(Game* game) : GameObject(game) {}
+    Player(IGameWorld* game) : GameObject(game) {}
 
     void handleEvent(const SDL_Event& event) override;
     void update(float deltaTime) override;
