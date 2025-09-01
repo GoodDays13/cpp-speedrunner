@@ -22,22 +22,6 @@ void Game::run() {
     lastFrameTime = SDL_GetTicksNS();
     isRunning = true;
     while (isRunning) {
-        // Handle pending scene changes
-        if (pendingSwitchScene) {
-            switchToScene(std::move(pendingSwitchScene));
-            pendingSwitchScene = nullptr;
-            pendingPopScene = false;
-            pendingPushScenes.clear();
-        }
-        if (pendingPopScene) {
-            popScene();
-            pendingPopScene = false;
-        }
-        for (auto& scene : pendingPushScenes) {
-            pushScene(std::move(scene));
-        }
-        pendingPushScenes.clear();
-
         Uint64 currentTime = SDL_GetTicksNS();
         Uint64 elapsedTime = currentTime - lastFrameTime;
         if (elapsedTime < frameDelay) {
@@ -59,6 +43,25 @@ void Game::run() {
 
         sceneStack.back()->update(deltaTime);
         video->render(sceneStack.back()->render());
+
+        // Handle pending scene changes
+        if (pendingSwitchScene) {
+            switchToScene(std::move(pendingSwitchScene));
+            pendingSwitchScene = nullptr;
+            pendingPopScene = false;
+            pendingPushScenes.clear();
+        }
+        if (pendingPopScene) {
+            popScene();
+            pendingPopScene = false;
+        }
+        for (auto& scene : pendingPushScenes) {
+            pushScene(std::move(scene));
+        }
+        pendingPushScenes.clear();
+
+        if (sceneStack.size() == 0)
+            isRunning = false;
     }
 }
 

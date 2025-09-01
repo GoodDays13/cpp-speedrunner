@@ -1,5 +1,6 @@
 #include "PlatformerScene.h"
 #include "GameObject.h"
+#include "TitleScreen.h"
 #include "Video.h"
 #include "Player.h"
 #include <SDL3/SDL_events.h>
@@ -13,7 +14,7 @@
 #include <vector>
 
 void PlatformerScene::initialize(ISceneManager* sceneManager) {
-    sceneManager = sceneManager;
+    this->sceneManager = sceneManager;
     timeSpeed = 1.0f;
 
     camera = {{0, 0}, {16, 9}};
@@ -31,26 +32,43 @@ void PlatformerScene::initialize(ISceneManager* sceneManager) {
             floor.lock()->transform.position = {static_cast<float>(x), static_cast<float>(y)};
         }
     }
+
+    setupBinds();
 };
 
+void PlatformerScene::setupBinds() {
+    keyActions[SDL_SCANCODE_ESCAPE] = [&](const SDL_Event& event) {
+        if (event.type == SDL_EVENT_KEY_UP) sceneManager->queueSwitchToScene(std::make_unique<TitleScreen>());
+    };
+    keyActions[SDL_SCANCODE_KP_PLUS] = [&](const SDL_Event& event) {
+        if (event.type == SDL_EVENT_KEY_DOWN) timeSpeed *= 1.25f;
+    };
+    keyActions[SDL_SCANCODE_KP_MINUS] = [&](const SDL_Event& event) {
+        if (event.type == SDL_EVENT_KEY_DOWN) timeSpeed *= 0.8f;
+    };
+}
+
 void PlatformerScene::handleEvent(SDL_Event event, const Video& video) {
-    if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
-        Vector2 position = video.convertPixelToGame({event.button.x, event.button.y}, camera);
-        position.x = std::round(position.x);
-        position.y = std::round(position.y);
-        auto things = findObjectsAtCoords(position);
-        if (things.size() == 0) {
-            auto obj = createGameObject();
-            obj.lock()->transform.position = position;
-        } else {
-            destroyGameObject(things[0]);
+    switch (event.type) {
+        case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+            Vector2 position = video.convertPixelToGame({event.button.x, event.button.y}, camera);
+            position.x = std::round(position.x);
+            position.y = std::round(position.y);
+            auto things = findObjectsAtCoords(position);
+            if (things.size() == 0) {
+                auto obj = createGameObject();
+                obj.lock()->transform.position = position;
+            } else {
+                destroyGameObject(things[0]);
+            }
+            break;
         }
-    } else if (event.type == SDL_EVENT_KEY_DOWN) {
-        if (event.key.scancode == SDL_SCANCODE_KP_PLUS) {
-            timeSpeed *= 1.25f;
-        } else if (event.key.scancode == SDL_SCANCODE_KP_MINUS) {
-            timeSpeed *= 0.8f;
-        }
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
+            auto it = keyActions.find(event.key.scancode);
+            if (it != keyActions.end())
+                it->second(event);
+            break;
     }
     for (int i = 0; i < objects.size(); i++) {
         objects[i]->handleEvent(event);

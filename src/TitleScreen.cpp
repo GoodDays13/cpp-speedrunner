@@ -1,5 +1,6 @@
 #include "TitleScreen.h"
 #include "PlatformerScene.h"
+#include <SDL3/SDL_scancode.h>
 #include <memory>
 
 void TitleScreen::initialize(ISceneManager* sceneManager) {
@@ -7,11 +8,17 @@ void TitleScreen::initialize(ISceneManager* sceneManager) {
 }
 
 void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
-    if (event.type == SDL_EVENT_KEY_DOWN) {
-        // On any key press, exit the title screen (in a real game, you'd probably want to switch to another scene)
-        // For this example, we'll just log a message
-        SDL_Log("Key pressed, exiting title screen.");
-        sceneManager->queueSwitchToScene(std::make_unique<PlatformerScene>());
+    if (event.type == SDL_EVENT_KEY_UP) {
+        switch (event.key.scancode) {
+            case SDL_SCANCODE_RETURN:
+                sceneManager->queueSwitchToScene(std::make_unique<PlatformerScene>());
+                break;
+            case SDL_SCANCODE_ESCAPE:
+                sceneManager->queuePopScene(this);
+                break;
+            default:
+                break;
+        }
     }
 }
 
