@@ -68,11 +68,9 @@ void Player::update(float deltaTime) {
             velocity -= collision->normal * collision->normal.dot(velocity);
 
             // Handle any overlap due to floating point precision issues
-            const float padding = 1e-6f;
-            if (fabs(transform.position.x) < padding) {
-                transform.position.x = 0.0f;
-            } if (fabs(transform.position.y) < padding) {
-                transform.position.y = 0.0f;
+            if (auto other = collision->other.lock()) {
+                Vector2 mtv = computeMTV(*other);
+                transform.position += mtv;
             }
         } else {
             // No collision, move the full remaining time
