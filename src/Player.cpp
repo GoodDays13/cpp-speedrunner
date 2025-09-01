@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "IGameWorld.h"
 #include <SDL3/SDL_log.h>
+#include <algorithm>
 #include <cmath>
 #include <optional>
 
@@ -26,6 +27,7 @@ void Player::handleEvent(const SDL_Event& event) {
             default:
                 break;
         }
+        input.x = std::clamp(input.x, -1.0f, 1.0f);
     }
 }
 

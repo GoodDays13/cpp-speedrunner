@@ -12,7 +12,8 @@
 #include <optional>
 #include <vector>
 
-void PlatformerScene::initialize() {
+void PlatformerScene::initialize(ISceneManager* sceneManager) {
+    sceneManager = sceneManager;
     timeSpeed = 1.0f;
 
     camera = {{0, 0}, {16, 9}};
