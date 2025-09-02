@@ -71,6 +71,8 @@ void Player::update(float deltaTime) {
 
             // Handle any overlap due to floating point precision issues
             if (auto other = collision->other.lock()) {
+                // Check if touching the end
+                if (other->hasTag("end")) game->completeLevel();
                 Vector2 mtv = computeMTV(*other);
                 transform.position += mtv;
             }

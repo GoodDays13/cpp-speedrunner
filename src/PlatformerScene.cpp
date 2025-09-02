@@ -4,6 +4,7 @@
 #include "Video.h"
 #include "Player.h"
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_log.h>
 #include <SDL3/SDL_scancode.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_timer.h>
@@ -21,6 +22,7 @@ void PlatformerScene::initialize(ISceneManager* sceneManager) {
 
     auto playerPtr = std::make_shared<Player>(this);
     playerPtr->color = {1, 0, 0, 1};
+    playerPtr->addTag("player");
 
     player = playerPtr;
 
@@ -28,12 +30,22 @@ void PlatformerScene::initialize(ISceneManager* sceneManager) {
 
     for (int x = -50; x <= 50; x++) {
         for (int y = -1; y >= -50; y--) {
-            auto floor = createGameObject();
-            floor.lock()->transform.position = {static_cast<float>(x), static_cast<float>(y)};
+            if (auto floor = createGameObject().lock()) {
+                floor->transform.position = {static_cast<float>(x), static_cast<float>(y)};
+                if (x == 30 && y == -10) {
+                    floor->color = {0, 1, 0, 1};
+                    floor->addTag("end");
+                } else {
+                    floor->addTag("floor");
+                }
+            }
+
         }
     }
 
     setupBinds();
+
+    startMS = SDL_GetTicks();
 };
 
 void PlatformerScene::setupBinds() {
@@ -51,15 +63,19 @@ void PlatformerScene::setupBinds() {
 void PlatformerScene::handleEvent(SDL_Event event, const Video& video) {
     switch (event.type) {
         case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+            // Create or remove a tile at a position. This is just for debug and not planned to be a game feature. Maybe in level editor?
             Vector2 position = video.convertPixelToGame({event.button.x, event.button.y}, camera);
             position.x = std::round(position.x);
             position.y = std::round(position.y);
             auto things = findObjectsAtCoords(position);
             if (things.size() == 0) {
-                auto obj = createGameObject();
-                obj.lock()->transform.position = position;
-            } else {
-                destroyGameObject(things[0]);
+                if (auto obj = createGameObject().lock()) {
+                    obj->transform.position = position;
+                    obj->addTag("floor");
+                }
+            } else if (auto thing = things[0].lock()) {
+                if (thing->hasTag("floor"))
+                    destroyGameObject(thing);
             }
             break;
         }
@@ -92,6 +108,15 @@ Video::RenderInfo PlatformerScene::render() {
     }
     info.camera = camera;
     return info;
+}
+
+void PlatformerScene::completeLevel() {
+    Uint64 completionTimeMS = SDL_GetTicks() - startMS;
+    float completionTimeSec = static_cast<float>(completionTimeMS) / 1000.0f;
+
+    SDL_Log("Time to complete: %.4f", completionTimeSec);
+
+    sceneManager->queueSwitchToScene(std::make_unique<TitleScreen>());
 }
 
 std::optional<Collision> PlatformerScene::checkCollisions(const GameObject& obj) {

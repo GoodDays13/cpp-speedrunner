@@ -17,6 +17,8 @@ class IGameWorld {
 public:
     virtual ~IGameWorld() = default;
 
+    virtual void completeLevel() = 0;
+
     virtual std::optional<Collision> checkCollisions(const GameObject& obj) = 0;
     virtual std::vector<std::weak_ptr<GameObject>> findObjectsAtCoords(Vector2 pos) = 0;
     virtual std::weak_ptr<GameObject> createGameObject() = 0;

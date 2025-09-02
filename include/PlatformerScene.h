@@ -22,6 +22,7 @@ private:
     float timeSpeed = 1.0f;
     std::unordered_map<SDL_Scancode, std::function<void(const SDL_Event&)>> keyActions;
     void setupBinds();
+    Uint64 startMS;
 public:
     PlatformerScene() = default;
     ~PlatformerScene() = default;
@@ -30,6 +31,8 @@ public:
     void handleEvent(SDL_Event event, const Video& video) override;
     void update(float deltaTime) override;
     Video::RenderInfo render() override;
+
+    void completeLevel() override;
 
     std::optional<Collision> checkCollisions(const GameObject& obj) override;
     std::vector<std::weak_ptr<GameObject>> findObjectsAtCoords(Vector2 pos) override;

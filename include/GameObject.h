@@ -3,8 +3,11 @@
 #include "IGameWorld.h"
 #include "math.h"
 #include <SDL3/SDL_events.h>
+#include <algorithm>
 
 class GameObject {
+private:
+    std::vector<std::string> tags;
 public:
     GameObject();
     GameObject(IGameWorld* game);
@@ -23,4 +26,16 @@ public:
     bool isTouching(const GameObject& other);
 
     Vector2 computeMTV(const GameObject& other);
+
+    bool hasTag(const std::string& tag) const {
+        return std::find(tags.begin(), tags.end(), tag) != tags.end();
+    }
+
+    void addTag(const std::string& tag) {
+        if (!hasTag(tag)) tags.push_back(tag);
+    }
+
+    void removeTag(const std::string& tag) {
+        tags.erase(std::remove(tags.begin(), tags.end(), tag), tags.end());
+    }
 };
