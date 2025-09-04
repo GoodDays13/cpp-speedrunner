@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "objects": [
+    {
+      "position": {"x": 100.1234, "y": 200.0},
+      "size": {"x": 32.0, "y": 32.0},
+      "tags": ["player", "spawn", "moveable"]
+    },
+    {
+      "position": {"x": 150.0, "y": 300.0},
+      "size": {"x": 128.0, "y": 32.0},
+      "tags": ["platform", "solid", "wood"]
+    }
+  ]
+}
