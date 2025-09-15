@@ -1,3 +1,4 @@
+#include "FileReader.h"
 #include "TitleScreen.h"
 #include "PlatformerScene.h"
 #include <SDL3/SDL_scancode.h>
@@ -11,7 +12,7 @@ void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
     if (event.type == SDL_EVENT_KEY_UP) {
         switch (event.key.scancode) {
             case SDL_SCANCODE_RETURN:
-                sceneManager->queueSwitchToScene(std::make_unique<PlatformerScene>());
+                sceneManager->queueSwitchToScene(std::make_unique<PlatformerScene>(FileReader("example.json").readJsonFile()));
                 break;
             case SDL_SCANCODE_ESCAPE:
                 sceneManager->queuePopScene(this);

@@ -1,15 +1,22 @@
 {
   "version": 1,
+  "player": {
+    "position": {"x": 0.0, "y": 0.0},
+    "scale": {"x": 1.0, "y": 1.0},
+    "color": {"r": 1.0, "g": 0.0, "b": 0.0, "a": 1.0}
+  },
   "objects": [
     {
-      "position": {"x": 100.1234, "y": 200.0},
-      "size": {"x": 32.0, "y": 32.0},
-      "tags": ["player", "spawn", "moveable"]
+      "position": {"x": 0.0, "y": -1.0},
+      "scale": {"x": 31.0, "y": 1.0},
+      "color": {"r": 1.0, "g": 1.0, "b": 1.0, "a": 1.0},
+      "tags": ["floor"]
     },
     {
-      "position": {"x": 150.0, "y": 300.0},
-      "size": {"x": 128.0, "y": 32.0},
-      "tags": ["platform", "solid", "wood"]
+      "position": {"x": 10.0, "y": 0.0},
+      "scale": {"x": 1.0, "y": 1.0},
+      "color": {"r": 0.0, "g": 1.0, "b": 0.0, "a": 1.0},
+      "tags": ["end"]
     }
   ]
 }

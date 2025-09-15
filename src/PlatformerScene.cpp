@@ -18,35 +18,64 @@ void PlatformerScene::initialize(ISceneManager* sceneManager) {
     this->sceneManager = sceneManager;
     timeSpeed = 1.0f;
 
-    camera = {{0, 0}, {16, 9}};
-
-    auto playerPtr = std::make_shared<Player>(this);
-    playerPtr->color = {1, 0, 0, 1};
-    playerPtr->addTag("player");
-
-    player = playerPtr;
-
-    objects.push_back(playerPtr);
-
-    for (int x = -50; x <= 50; x++) {
-        for (int y = -1; y >= -50; y--) {
-            if (auto floor = createGameObject().lock()) {
-                floor->transform.position = {static_cast<float>(x), static_cast<float>(y)};
-                if (x == 30 && y == -10) {
-                    floor->color = {0, 1, 0, 1};
-                    floor->addTag("end");
-                } else {
-                    floor->addTag("floor");
-                }
-            }
-
-        }
-    }
+    loadLevel();
 
     setupBinds();
 
     startMS = SDL_GetTicks();
 };
+
+void PlatformerScene::loadLevel() {
+    JsonValue playerData = levelData["player"];
+    JsonValue objectsData = levelData["objects"];
+
+    camera = {{0, 0}, {16, 9}};
+
+    auto playerPtr = std::make_shared<Player>(this);
+    playerPtr->transform.position = {
+        static_cast<float>(playerData["position"]["x"].getDouble()),
+        static_cast<float>(playerData["position"]["y"].getDouble())
+    };
+    playerPtr->transform.scale = {
+        static_cast<float>(playerData["scale"]["x"].getDouble()),
+        static_cast<float>(playerData["scale"]["y"].getDouble())
+    };
+    playerPtr->color = {
+        static_cast<float>(playerData["color"]["r"].getDouble()),
+        static_cast<float>(playerData["color"]["g"].getDouble()),
+        static_cast<float>(playerData["color"]["b"].getDouble()),
+        static_cast<float>(playerData["color"]["a"].getDouble())
+    };
+    playerPtr->addTag("player");
+
+    camera.position = playerPtr->transform.position;
+
+    player = playerPtr;
+
+    objects.push_back(playerPtr);
+
+    for (int i = 0; i < objectsData.size(); i++) {
+        JsonValue objData = objectsData[i];
+        auto obj = createGameObject().lock();
+        obj->transform.position = {
+            static_cast<float>(objData["position"]["x"].getDouble()),
+            static_cast<float>(objData["position"]["y"].getDouble())
+        };
+        obj->transform.scale = {
+            static_cast<float>(objData["scale"]["x"].getDouble()),
+            static_cast<float>(objData["scale"]["y"].getDouble())
+        };
+        obj->color = {
+            static_cast<float>(objData["color"]["r"].getDouble()),
+            static_cast<float>(objData["color"]["g"].getDouble()),
+            static_cast<float>(objData["color"]["b"].getDouble()),
+            static_cast<float>(objData["color"]["a"].getDouble())
+        };
+        for (int j = 0; j < objData["tags"].size(); j++) {
+            obj->addTag(objData["tags"][j].getString());
+        }
+    }
+}
 
 void PlatformerScene::setupBinds() {
     keyActions[SDL_SCANCODE_ESCAPE] = [&](const SDL_Event& event) {

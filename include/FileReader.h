@@ -14,5 +14,13 @@ private:
     JsonValue parseArray();
     JsonValue parseValue();
 public:
-    JsonValue readJsonFile(const std::string& filePath);
+    FileReader(const std::string& filename) {
+        file = fopen(filename.c_str(), "r");
+        if (!file) {
+            throw std::runtime_error("Failed to open file: " + filename);
+        }
+    }
+    ~FileReader() { if (file) fclose(file); }
+
+    JsonValue readJsonFile();
 };

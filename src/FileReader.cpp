@@ -5,9 +5,7 @@
 #include <string>
 #include <unordered_map>
 
-JsonValue FileReader::readJsonFile(const std::string &filePath) {
-    file = fopen(filePath.c_str(), "r");
-
+JsonValue FileReader::readJsonFile() {
     return parseValue();
 };
 
