@@ -53,6 +53,8 @@ private:
     unsigned int window_width;
     unsigned int window_height;
 
+    bool conwayActive = false;
+
     SDL_Window* window;
     SDL_GPUDevice* gpuDevice;
     SDL_GPUShader* shaders[5];

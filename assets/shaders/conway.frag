@@ -8,7 +8,8 @@ layout(set = 2, binding = 0) uniform sampler2D screenBuffer;
 void main() {
     ivec2 size = textureSize(screenBuffer, 0);
     vec2 texelSize = 1.0 / size;
-    vec4 pixel = vec4(0);
+    vec4 original = texture(screenBuffer, uv);
+    vec4 colorSum = vec4(0);
 
     int neighbors = 0;
     bool alive;
@@ -19,7 +20,8 @@ void main() {
             vec2 location = uv + offset;
             if (location.x >= 0.0 && location.y >= 0.0 && location.x < 1.0 && location.y < 1.0) {
                 vec4 pixel = texture(screenBuffer, uv + offset);
-                neighborAlive = pixel.x + pixel.y + pixel.z > 1.5;
+                neighborAlive = pixel.x + pixel.y + pixel.z > 0.0;
+                if (neighborAlive) colorSum += pixel;
             }
             if (x == 0 && y == 0) {
                 alive = neighborAlive;
@@ -29,5 +31,6 @@ void main() {
         }
     }
     bool newAliveStatus = (neighbors == 3) || (neighbors == 2 && alive);
-    fragColor = newAliveStatus ? vec4(1, 1, 1, 1) : vec4(0, 0, 0, 1);
+    vec4 newColor = alive ? original : (colorSum / float(neighbors));
+    fragColor = newAliveStatus ? newColor : vec4(0, 0, 0, 1);
 }

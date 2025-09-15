@@ -306,7 +306,7 @@ void Video::render(RenderInfo info) {
     bindings[0].buffer = vertexBuffer;
     bindings[1].buffer = miscBuffer;
     bindings[2].buffer = indexBuffer;
-    colors.load_op = SDL_GPU_LOADOP_CLEAR;
+    colors.load_op = conwayActive ? SDL_GPU_LOADOP_LOAD : SDL_GPU_LOADOP_CLEAR;
     colors.store_op = SDL_GPU_STOREOP_STORE;
     colors.clear_color = {0, 0, 0, 1};
 
@@ -342,27 +342,29 @@ void Video::render(RenderInfo info) {
 
 
     // Post-Processing Passes
-    // SDL_GPUSamplerCreateInfo samplerInfo = {};
-    // SDL_GPUTextureSamplerBinding samplerBinding = {};
-    // samplerInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-    // samplerInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-    //
-    // SDL_GPUSampler* sampler = SDL_CreateGPUSampler(gpuDevice, &samplerInfo);
-    // samplerBinding.sampler = sampler;
-    //
-    // samplerBinding.texture = intermediates[currentIntermediate];
-    // currentIntermediate = (currentIntermediate + 1) % 2;
-    // colors.texture = intermediates[currentIntermediate];
-    //
-    // render = SDL_BeginGPURenderPass(cmd, &colors, 1, NULL);
-    // SDL_BindGPUGraphicsPipeline(render, conwayPipeline);
-    // SDL_SetGPUViewport(render, &viewport);
-    //
-    // SDL_BindGPUVertexBuffers(render, 0, bindings, 1);
-    // SDL_BindGPUIndexBuffer(render, bindings + 2, SDL_GPU_INDEXELEMENTSIZE_32BIT);
-    // SDL_BindGPUFragmentSamplers(render, 0, &samplerBinding, 1);
-    // SDL_DrawGPUIndexedPrimitives(render, 6, 1, 0, 0, 0);
-    // SDL_EndGPURenderPass(render);
+    if (conwayActive) {
+        SDL_GPUSamplerCreateInfo samplerInfo = {};
+        SDL_GPUTextureSamplerBinding samplerBinding = {};
+        samplerInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+        samplerInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+
+        SDL_GPUSampler* sampler = SDL_CreateGPUSampler(gpuDevice, &samplerInfo);
+        samplerBinding.sampler = sampler;
+
+        samplerBinding.texture = intermediates[currentIntermediate];
+        currentIntermediate = (currentIntermediate + 1) % 2;
+        colors.texture = intermediates[currentIntermediate];
+
+        render = SDL_BeginGPURenderPass(cmd, &colors, 1, NULL);
+        SDL_BindGPUGraphicsPipeline(render, conwayPipeline);
+        SDL_SetGPUViewport(render, &viewport);
+
+        SDL_BindGPUVertexBuffers(render, 0, bindings, 1);
+        SDL_BindGPUIndexBuffer(render, bindings + 2, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+        SDL_BindGPUFragmentSamplers(render, 0, &samplerBinding, 1);
+        SDL_DrawGPUIndexedPrimitives(render, 6, 1, 0, 0, 0);
+        SDL_EndGPURenderPass(render);
+    }
 
 
     SDL_GPUTextureLocation src = {};
