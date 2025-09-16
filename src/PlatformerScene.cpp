@@ -26,10 +26,14 @@ void PlatformerScene::initialize(ISceneManager* sceneManager) {
 };
 
 void PlatformerScene::loadLevel() {
-    JsonValue playerData = levelData["player"];
-    JsonValue objectsData = levelData["objects"];
+    if (!levelData) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "No level data provided to PlatformerScene!");
+        sceneManager->queueSwitchToScene(std::make_unique<TitleScreen>());
+        return;
+    }
 
-    camera = {{0, 0}, {16, 9}};
+    JsonValue& playerData = (*levelData)["player"];
+    JsonValue& objectsData = (*levelData)["objects"];
 
     auto playerPtr = std::make_shared<Player>(
         this,
@@ -51,13 +55,14 @@ void PlatformerScene::loadLevel() {
     playerPtr->addTag("player");
 
     camera.position = playerPtr->transform.position;
+    camera.scale = {16, 9};
 
     player = playerPtr;
 
     objects.push_back(playerPtr);
 
     for (int i = 0; i < objectsData.size(); i++) {
-        JsonValue objData = objectsData[i];
+        JsonValue& objData = objectsData[i];
         auto obj = createGameObject().lock();
         obj->transform.position = {
             static_cast<float>(objData["position"]["x"].getDouble()),
@@ -77,6 +82,8 @@ void PlatformerScene::loadLevel() {
             obj->addTag(objData["tags"][j].getString());
         }
     }
+
+    levelData.reset(); // Free memory, we don't need it anymore
 }
 
 void PlatformerScene::setupBinds() {
@@ -112,9 +119,9 @@ void PlatformerScene::handleEvent(SDL_Event event, const Video& video) {
         }
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
-            auto it = keyActions.find(event.key.scancode);
-            if (it != keyActions.end())
-                it->second(event);
+            if (keyActions.find(event.key.scancode) != keyActions.end()) {
+                keyActions[event.key.scancode](event);
+            }
             break;
     }
     for (int i = 0; i < objects.size(); i++) {
@@ -135,9 +142,8 @@ void PlatformerScene::update(float deltaTime) {
 Video::RenderInfo PlatformerScene::render() {
     Video::RenderInfo info;
     for (int i = 0; i < objects.size(); i++) {
-        if (objects[i]->hasTag("no_draw"))
-            continue;
-        info.instances.push_back({Video::QUAD, objects[i]->transform, objects[i]->color});
+        if (!objects[i]->hasTag("no_draw"))
+            info.instances.push_back({Video::QUAD, objects[i]->transform, objects[i]->color});
     }
     info.camera = camera;
     return info;

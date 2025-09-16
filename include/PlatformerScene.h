@@ -17,7 +17,7 @@
 
 class PlatformerScene : public IScene, public IGameWorld {
 private:
-    JsonValue levelData;
+    std::shared_ptr<JsonValue> levelData;
     std::vector<std::shared_ptr<GameObject>> objects;
     std::weak_ptr<Player> player;
     Transform camera;
@@ -27,8 +27,8 @@ private:
     void setupBinds();
     Uint64 startMS;
 public:
-    PlatformerScene() = default;
-    PlatformerScene(const JsonValue& levelData) : levelData(levelData) {}
+    PlatformerScene() = delete;
+    PlatformerScene(std::shared_ptr<JsonValue> levelData) : levelData(levelData) {}
     ~PlatformerScene() = default;
 
     void initialize(ISceneManager* sceneManager) override;

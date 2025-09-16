@@ -11,10 +11,13 @@ void TitleScreen::initialize(ISceneManager* sceneManager) {
 void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
     if (event.type == SDL_EVENT_KEY_UP) {
         switch (event.key.scancode) {
-            case SDL_SCANCODE_RETURN:
-                sceneManager->queueSwitchToScene(std::make_unique<PlatformerScene>(FileReader("example.json").readJsonFile()));
+            case SDL_SCANCODE_RETURN: {
+                auto jsonFileReader = FileReader("example.json");
+                auto jsonValue = std::make_shared<JsonValue>(jsonFileReader.readJsonFile());
+                auto platformerScene = std::make_unique<PlatformerScene>(jsonValue);
+                sceneManager->queueSwitchToScene(std::move(platformerScene));
                 break;
-            case SDL_SCANCODE_ESCAPE:
+            } case SDL_SCANCODE_ESCAPE:
                 sceneManager->queuePopScene(this);
                 break;
             default:
