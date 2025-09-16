@@ -31,21 +31,23 @@ void PlatformerScene::loadLevel() {
 
     camera = {{0, 0}, {16, 9}};
 
-    auto playerPtr = std::make_shared<Player>(this);
-    playerPtr->transform.position = {
-        static_cast<float>(playerData["position"]["x"].getDouble()),
-        static_cast<float>(playerData["position"]["y"].getDouble())
-    };
-    playerPtr->transform.scale = {
-        static_cast<float>(playerData["scale"]["x"].getDouble()),
-        static_cast<float>(playerData["scale"]["y"].getDouble())
-    };
-    playerPtr->color = {
-        static_cast<float>(playerData["color"]["r"].getDouble()),
-        static_cast<float>(playerData["color"]["g"].getDouble()),
-        static_cast<float>(playerData["color"]["b"].getDouble()),
-        static_cast<float>(playerData["color"]["a"].getDouble())
-    };
+    auto playerPtr = std::make_shared<Player>(
+        this,
+        Vector2(
+            playerData["position"]["x"].getDouble(),
+            playerData["position"]["y"].getDouble()
+        )
+    );
+    playerPtr->transform.scale = Vector2(
+        playerData["scale"]["x"].getDouble(),
+        playerData["scale"]["y"].getDouble()
+    );
+    playerPtr->color = Vector4(
+        playerData["color"]["r"].getDouble(),
+        playerData["color"]["g"].getDouble(),
+        playerData["color"]["b"].getDouble(),
+        playerData["color"]["a"].getDouble()
+    );
     playerPtr->addTag("player");
 
     camera.position = playerPtr->transform.position;
@@ -133,6 +135,8 @@ void PlatformerScene::update(float deltaTime) {
 Video::RenderInfo PlatformerScene::render() {
     Video::RenderInfo info;
     for (int i = 0; i < objects.size(); i++) {
+        if (objects[i]->hasTag("no_draw"))
+            continue;
         info.instances.push_back({Video::QUAD, objects[i]->transform, objects[i]->color});
     }
     info.camera = camera;

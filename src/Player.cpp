@@ -3,6 +3,7 @@
 #include <SDL3/SDL_log.h>
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <optional>
 
 void Player::handleEvent(const SDL_Event& event) {
@@ -32,30 +33,45 @@ void Player::handleEvent(const SDL_Event& event) {
 }
 
 void Player::update(float deltaTime) {
+    // Gravity & terminal velocity
     velocity.y = std::max(velocity.y - gravity * deltaTime, -terminalVelocity);
+
+    // Jumping
     if (jumpTimer > 0.0f) {
         velocity.y = jumpSpeed;
-        jumpTimer -= deltaTime;
     }
-    coyoteTimer -= deltaTime;
 
-    float desiredDifference = velocity.x - input.x * speed;
-    float accel = (coyoteTimer > 0 ? 1.0f : 0.75f) / accelerationTime * speed * deltaTime;
-    if (std::fabs(desiredDifference) < accel) {
-        velocity.x = input.x * speed;
+    // Horizontal movement with acceleration
+    float targetVelocityX = input.x * speed;
+    float velocityDifference = velocity.x - targetVelocityX;
+    float accelerationMultiplier = (coyoteTimer > 0) ? 1.0f : 0.75f; // coyoteTimer > 0 means on ground
+    float maxAcceleration = accelerationMultiplier * speed / accelerationTime * deltaTime;
+
+    if (std::fabs(velocityDifference) < maxAcceleration) {
+        velocity.x = targetVelocityX; // Snap to target if within acceleration range
     } else {
-        velocity.x += accel * (desiredDifference > 0 ? -1 : 1);
+        velocity.x += maxAcceleration * ((velocityDifference > 0) ? -1 : 1); // Move towards target
     }
 
+    // Keep track of if the movement this frame kills us or completes the level.
+    bool levelComplete = false;
+    bool dead = false;
 
     // Keep track of remaining time to handle multiple collisions in one frame
     float remainingTime = deltaTime;
     while (remainingTime > 0.0f) {
         std::optional<Collision> collision = std::nullopt;
+        std::shared_ptr<GameObject> other;
         if (game) { // Sanity check
             collision = game->checkCollisions(*this);
         }
-        if (collision && collision->time < remainingTime) {
+        if (collision && (other = collision->other.lock()) && collision->time < remainingTime) {
+            if (other->hasTag("end")) {
+                levelComplete = true;
+            } if (other->hasTag("kill")) {
+                dead = true;
+            }
+
             // Move up to the collision
             transform.position += velocity * collision->time;
             remainingTime -= collision->time;
@@ -69,13 +85,9 @@ void Player::update(float deltaTime) {
             // Remove component of velocity in direction of normal
             velocity -= collision->normal * collision->normal.dot(velocity);
 
-            // Handle any overlap due to floating point precision issues
-            if (auto other = collision->other.lock()) {
-                // Check if touching the end
-                if (other->hasTag("end")) game->completeLevel();
-                Vector2 mtv = computeMTV(*other);
-                transform.position += mtv;
-            }
+            // Check if touching the end
+            Vector2 mtv = computeMTV(*other);
+            transform.position += mtv;
         } else {
             // No collision, move the full remaining time
             transform.position += velocity * remainingTime;
@@ -83,8 +95,23 @@ void Player::update(float deltaTime) {
         }
     }
 
-    if (transform.position.y < -20.0f) {
-        transform.position = {0.0f, 0.0f};
-        velocity.y = 0.0f;
-    }
+    // If killed during the frame, respawn. If complete level, do proper steps.
+    // If killed and complete level at same time, death takes priority
+    if (dead) respawn();
+    else if (levelComplete) game->completeLevel();
+
+    // Update timers
+    jumpTimer -= deltaTime;
+    coyoteTimer -= deltaTime;
+}
+
+void Player::setStartPosition(Vector2 pos) {
+    startPosition = pos;
+}
+
+void Player::respawn() {
+    transform.position = startPosition;
+    velocity = {0, 0};
+    coyoteTimer = 0.0f;
+    jumpTimer = 0.0f;
 }
