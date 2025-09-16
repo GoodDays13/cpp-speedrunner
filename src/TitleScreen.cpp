@@ -1,6 +1,7 @@
-#include "FileReader.h"
+#include "JsonReader.h"
 #include "TitleScreen.h"
 #include "PlatformerScene.h"
+#include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_scancode.h>
 #include <memory>
 
@@ -12,8 +13,16 @@ void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
     if (event.type == SDL_EVENT_KEY_UP) {
         switch (event.key.scancode) {
             case SDL_SCANCODE_RETURN: {
-                auto jsonFileReader = FileReader("example.json");
-                auto jsonValue = std::make_shared<JsonValue>(jsonFileReader.readJsonFile());
+                std::string levelPath = SDL_GetBasePath();
+                levelPath += "../example.json";
+                SDL_IOStream* stream = SDL_IOFromFile(levelPath.c_str(), "r");
+                if (!stream) {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", SDL_GetError());
+                    break;
+                }
+                auto jsonReader = JsonReader(stream);
+                SDL_CloseIO(stream);
+                auto jsonValue = std::make_shared<JsonValue>(jsonReader.readJsonFile());
                 auto platformerScene = std::make_unique<PlatformerScene>(jsonValue);
                 sceneManager->queueSwitchToScene(std::move(platformerScene));
                 break;

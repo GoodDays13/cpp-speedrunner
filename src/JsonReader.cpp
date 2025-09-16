@@ -1,22 +1,21 @@
-#include "FileReader.h"
+#include "JsonReader.h"
 #include <cctype>
-#include <cstdio>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 
-JsonValue FileReader::readJsonFile() {
+JsonValue JsonReader::readJsonFile() {
     return parseValue();
 };
 
-std::string FileReader::parseString() {
-    int c = getc(file);
-    if (c != '"') throw std::runtime_error("Expected '\"'");
+std::string JsonReader::parseString() {
+    if (next() != '"') throw std::runtime_error("Expected '\"'");
 
     std::string result;
-    while ((c = getc(file)) != EOF && c != '"') {
+    char c;
+    while ((c = next()) != '"') {
         if (c == '\\') {
-            c = getc(file);
+            c = next();
             if (c == 'n') result += '\n';
             else if (c == 't') result += '\t';
             else result += c;
@@ -27,18 +26,17 @@ std::string FileReader::parseString() {
     return result;
 }
 
-double FileReader::parseNumber() {
+double JsonReader::parseNumber() {
     bool negative = false;
     double result = 0;
     double decimalMult = 0;
 
-    int c = getc(file);
-    if (c == '-')
+    if (peek() == '-') {
         negative = true;
-    else
-        ungetc(c, file);
+        pos++;
+    }
 
-    while ((c = getc(file)) != EOF && (isdigit(c) || c == '.')) {
+    for (char c = next(); isdigit(c) || c == '.'; c = next()) {
         if (c == '.') {
             decimalMult = 1;
             continue;
@@ -50,79 +48,71 @@ double FileReader::parseNumber() {
 
         result += (c - '0') / (decimalMult == 0 ? 1 : decimalMult);
     }
-    if (c != EOF) ungetc(c, file);
+    pos--;
     return result * (negative ? -1 : 1);
 }
 
-JsonValue FileReader::parseObject() {
-    int c = getc(file);
+JsonValue JsonReader::parseObject() {
+    char c = next();
     std::unordered_map<std::string, JsonValue> obj;
 
     skipWhitespace();
-    if ((c = fgetc(file)) == '}') return JsonValue(obj); // empty object
-    ungetc(c, file);
+    if (next() == '}') return JsonValue(obj); // empty object
+    pos--;
 
     do {
         skipWhitespace();
         std::string key = parseString();
 
         skipWhitespace();
-        if (fgetc(file) != ':') throw std::runtime_error("Expected ':'");
+        if (next() != ':') throw std::runtime_error("Expected ':'");
 
         JsonValue value = parseValue();
         obj[key] = value;
 
         skipWhitespace();
-        c = getc(file);
+        c = next();
     } while (c == ',');
 
     if (c != '}') throw std::runtime_error("Expected '}'");
     return JsonValue(obj);
 }
 
-JsonValue FileReader::parseArray() {
-    int c = getc(file);
+JsonValue JsonReader::parseArray() {
+    int c = next();
     std::vector<JsonValue> arr;
 
     skipWhitespace();
-    if ((c = fgetc(file)) == ']') return JsonValue(arr); // empty array
-    ungetc(c, file);
+    if (next() == ']') return JsonValue(arr); // empty array
+    pos--;
 
     do {
         JsonValue value = parseValue();
         arr.push_back(value);
 
         skipWhitespace();
-        c = getc(file);
+        c = next();
     } while (c == ',');
 
     if (c != ']') throw std::runtime_error("Expected ']'");
     return JsonValue(arr);
 }
 
-void FileReader::skipWhitespace() {
-    int c;
-    while ((c = getc(file)) != EOF && isspace(c)) {
-        // consume whitespace
-    }
-    if (c != EOF) ungetc(c, file);
+void JsonReader::skipWhitespace() {
+    while (isspace(peek())) pos++;
 }
 
-JsonValue FileReader::parseValue() {
+JsonValue JsonReader::parseValue() {
     skipWhitespace();
-    int c = fgetc(file);
+    char c = peek();
 
     if (c == '"') {
-        ungetc(c, file);
         return JsonValue(parseString());
     } else if (isdigit(c) || c == '-') {
-        ungetc(c, file);
         return JsonValue(parseNumber());
     } else if (c == '{') {
-        ungetc(c, file);
         return parseObject();
     } else if (c == '[') {
-        ungetc(c, file);
         return parseArray();
     }
     throw std::runtime_error("Unexpected character");

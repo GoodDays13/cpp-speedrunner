@@ -53,7 +53,7 @@ add_executable(speedrunner
         src/PlatformerScene.cpp
         src/GameObject.cpp
         src/Player.cpp
-        src/FileReader.cpp
+        src/JsonReader.cpp
 )
 
 add_dependencies(speedrunner embed_shaders)
