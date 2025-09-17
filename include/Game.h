@@ -27,4 +27,5 @@ public:
     void queuePushScene(std::unique_ptr<IScene> scene) override;
     void queuePopScene(const IScene* requestingScene) override;
     void queueSwitchToScene(std::unique_ptr<IScene> scene) override;
+    void startLevel(std::string levelName) override;
 };

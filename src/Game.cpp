@@ -1,4 +1,6 @@
 #include "Game.h"
+#include "JsonReader.h"
+#include "PlatformerScene.h"
 #include "TitleScreen.h"
 #include "Video.h"
 #include <memory>
@@ -95,4 +97,19 @@ void Game::queuePopScene(const IScene* requestingScene) {
 
 void Game::queueSwitchToScene(std::unique_ptr<IScene> scene) {
     pendingSwitchScene = std::move(scene);
+}
+
+void Game::startLevel(std::string levelName) {
+    std::string levelPath = SDL_GetBasePath();
+    levelPath += "assets/levels/" + levelName;
+    SDL_IOStream* stream = SDL_IOFromFile(levelPath.c_str(), "r");
+    if (!stream) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", SDL_GetError());
+        return;
+    }
+    auto jsonReader = JsonReader(stream);
+    SDL_CloseIO(stream);
+    auto jsonValue = std::make_shared<JsonValue>(jsonReader.readJsonFile());
+    auto platformerScene = std::make_unique<PlatformerScene>(jsonValue);
+    queueSwitchToScene(std::move(platformerScene));
 }
