@@ -14,7 +14,7 @@ void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
         switch (event.key.scancode) {
             case SDL_SCANCODE_RETURN: {
                 std::string levelPath = SDL_GetBasePath();
-                levelPath += "../example.json";
+                levelPath += "assets/levels/example.json";
                 SDL_IOStream* stream = SDL_IOFromFile(levelPath.c_str(), "r");
                 if (!stream) {
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", SDL_GetError());
