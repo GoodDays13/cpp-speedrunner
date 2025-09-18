@@ -38,19 +38,29 @@ void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
             } case SDL_SCANCODE_ESCAPE:
                 sceneManager->queuePopScene(this);
                 break;
+            default:
+                break;
+        }
+    } else if (event.type == SDL_EVENT_KEY_DOWN) {
+        switch (event.key.scancode) {
             case SDL_SCANCODE_UP:
             case SDL_SCANCODE_W:
-                if (selectedItem > 0) selectedItem--;
+                if (selectedItem == menuItems.size()) selectedItem = 0; // If nothing is selected, select the first item
+                else if (selectedItem > 0) selectedItem--;
+                else selectedItem = menuItems.size() - 1; // Wrap around to the last item
                 break;
             case SDL_SCANCODE_DOWN:
             case SDL_SCANCODE_S:
-                if (selectedItem + 1 < menuItems.size()) selectedItem++;
+                if (selectedItem == menuItems.size()) selectedItem = 0; // If nothing is selected, select the first item
+                else if (selectedItem < menuItems.size() - 1) selectedItem++;
+                else selectedItem = 0; // Wrap around to the first item
                 break;
             default:
                 break;
         }
     } else if (event.type == SDL_EVENT_MOUSE_MOTION) {
         Vector2 mousePos = video.convertPixelToGame({event.motion.x, event.motion.y}, {{0, 0}, {16, 9}});
+        selectedItem = menuItems.size(); // Deselect if not hovering over any item
         for (size_t i = 0; i < menuItems.size(); i++) {
             GameObject& item = menuItems[i].second;
             if (mousePos.x >= item.transform.position.x - item.transform.scale.x / 2 &&
@@ -63,13 +73,8 @@ void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
     } else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
         if (event.button.button == SDL_BUTTON_LEFT) {
             Vector2 mousePos = video.convertPixelToGame({event.button.x, event.button.y}, {{0, 0}, {16, 9}});
-            GameObject& item = menuItems[selectedItem].second;
-            if (mousePos.x >= item.transform.position.x - item.transform.scale.x / 2 &&
-                mousePos.x <= item.transform.position.x + item.transform.scale.x / 2 &&
-                mousePos.y >= item.transform.position.y - item.transform.scale.y / 2 &&
-                mousePos.y <= item.transform.position.y + item.transform.scale.y / 2) {
+            if (selectedItem < menuItems.size())
                 menuItems[selectedItem].first();
-            }
         }
     }
 }
