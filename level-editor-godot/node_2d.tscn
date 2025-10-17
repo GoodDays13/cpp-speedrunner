@@ -1,0 +1,40 @@
+[gd_scene load_steps=2 format=3 uid="uid://4pqund3nukl7"]
+
+[ext_resource type="Script" uid="uid://dwl3koja4hqs5" path="res://node_2d.gd" id="1_wtcfe"]
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_wtcfe")
+metadata/tags = ["floor"]
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+position = Vector2(384, 128)
+scale = Vector2(7, 1)
+polygon = PackedVector2Array(-64, -64, -64, 64, 64, 64, 64, -64)
+uv = PackedVector2Array(-496, -84, -318, -85, -322, 35, -505, 36)
+metadata/tags = ["floor"]
+
+[node name="Polygon2D2" type="Polygon2D" parent="."]
+position = Vector2(1408.0001, 128)
+scale = Vector2(7, 1)
+polygon = PackedVector2Array(-64, -64, -64, 64, 64, 64, 64, -64)
+uv = PackedVector2Array(-496, -84, -318, -85, -322, 35, -505, 36)
+metadata/tags = ["floor"]
+
+[node name="Polygon2D3" type="Polygon2D" parent="."]
+position = Vector2(768, -256)
+polygon = PackedVector2Array(-64, -64, -64, 64, 64, 64, 64, -64)
+uv = PackedVector2Array(-496, -84, -318, -85, -322, 35, -505, 36)
+metadata/tags = ["floor"]
+
+[node name="Player" type="Polygon2D" parent="."]
+color = Color(1, 0, 0, 1)
+polygon = PackedVector2Array(-64, -64, -64, 64, 64, 64, 64, -64)
+uv = PackedVector2Array(-496, -84, -318, -85, -322, 35, -505, 36)
+metadata/tags = ["player"]
+
+[node name="End" type="Polygon2D" parent="."]
+position = Vector2(896, 256)
+color = Color(0, 1, 0, 1)
+polygon = PackedVector2Array(-64, -64, -64, 64, 64, 64, 64, -64)
+uv = PackedVector2Array(-496, -84, -318, -85, -322, 35, -505, 36)
+metadata/tags = ["end"]
