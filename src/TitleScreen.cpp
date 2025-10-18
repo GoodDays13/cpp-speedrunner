@@ -14,7 +14,7 @@ void TitleScreen::initialize(ISceneManager* sceneManager) {
     startGame.transform.position = {0, 1};
     startGame.transform.scale = {6, 1};
     menuItems.push_back({[this]() {
-        this->sceneManager->startLevel("example.json");
+        this->sceneManager->startLevel("output.lvl");
     }, startGame});
 
     GameObject quitGame = GameObject();

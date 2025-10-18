@@ -1,3 +1,4 @@
+#include "LevelData.h"
 #include "Player.h"
 #include "IGameWorld.h"
 #include <SDL3/SDL_log.h>
@@ -66,9 +67,9 @@ void Player::update(float deltaTime) {
             collision = game->checkCollisions(*this);
         }
         if (collision && (other = collision->other.lock()) && collision->time < remainingTime) {
-            if (other->hasTag("end")) {
+            if (other->tags & Tags::End) {
                 levelComplete = true;
-            } if (other->hasTag("kill")) {
+            } if (other->tags & Tags::Kill) {
                 dead = true;
             }
 

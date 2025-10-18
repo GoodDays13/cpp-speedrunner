@@ -1,5 +1,6 @@
 #include "PlatformerScene.h"
 #include "GameObject.h"
+#include "LevelData.h"
 #include "TitleScreen.h"
 #include "Video.h"
 #include "Player.h"
@@ -32,27 +33,9 @@ void PlatformerScene::loadLevel() {
         return;
     }
 
-    JsonValue& playerData = (*levelData)["player"];
-    JsonValue& objectsData = (*levelData)["objects"];
-
-    auto playerPtr = std::make_shared<Player>(
-        this,
-        Vector2(
-            playerData["position"]["x"].getDouble(),
-            playerData["position"]["y"].getDouble()
-        )
-    );
-    playerPtr->transform.scale = Vector2(
-        playerData["scale"]["x"].getDouble(),
-        playerData["scale"]["y"].getDouble()
-    );
-    playerPtr->color = Vector4(
-        playerData["color"]["r"].getDouble(),
-        playerData["color"]["g"].getDouble(),
-        playerData["color"]["b"].getDouble(),
-        playerData["color"]["a"].getDouble()
-    );
-    playerPtr->addTag("player");
+    auto playerPtr = std::make_shared<Player>(this);
+    playerPtr->transform = levelData->player.transform;
+    playerPtr->color = levelData->player.color;
 
     camera.position = playerPtr->transform.position;
     camera.scale = {16, 9};
@@ -61,26 +44,12 @@ void PlatformerScene::loadLevel() {
 
     objects.push_back(playerPtr);
 
-    for (int i = 0; i < objectsData.size(); i++) {
-        JsonValue& objData = objectsData[i];
+    // for (int i = 0; i < objectsData.size(); i++) {
+    for (Object object : levelData->objects) {
         auto obj = createGameObject().lock();
-        obj->transform.position = {
-            static_cast<float>(objData["position"]["x"].getDouble()),
-            static_cast<float>(objData["position"]["y"].getDouble())
-        };
-        obj->transform.scale = {
-            static_cast<float>(objData["scale"]["x"].getDouble()),
-            static_cast<float>(objData["scale"]["y"].getDouble())
-        };
-        obj->color = {
-            static_cast<float>(objData["color"]["r"].getDouble()),
-            static_cast<float>(objData["color"]["g"].getDouble()),
-            static_cast<float>(objData["color"]["b"].getDouble()),
-            static_cast<float>(objData["color"]["a"].getDouble())
-        };
-        for (int j = 0; j < objData["tags"].size(); j++) {
-            obj->addTag(objData["tags"][j].getString());
-        }
+        obj->transform = object.transform;
+        obj->color = object.color;
+        obj->tags = object.tags;
     }
 
     levelData.reset(); // Free memory, we don't need it anymore
@@ -109,10 +78,10 @@ void PlatformerScene::handleEvent(SDL_Event event, const Video& video) {
             if (things.size() == 0) {
                 if (auto obj = createGameObject().lock()) {
                     obj->transform.position = position;
-                    obj->addTag("floor");
+                    obj->tags |= Tags::Floor;
                 }
             } else if (auto thing = things[0].lock()) {
-                if (thing->hasTag("floor"))
+                if (thing->tags & Tags::Floor)
                     destroyGameObject(thing);
             }
             break;
@@ -142,7 +111,7 @@ void PlatformerScene::update(float deltaTime) {
 Video::RenderInfo PlatformerScene::render() {
     Video::RenderInfo info;
     for (int i = 0; i < objects.size(); i++) {
-        if (!objects[i]->hasTag("no_draw"))
+        if (~objects[i]->tags & Tags::NoDraw)
             info.instances.push_back({Video::QUAD, objects[i]->transform, objects[i]->color});
     }
     info.camera = camera;

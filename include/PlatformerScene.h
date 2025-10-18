@@ -3,7 +3,7 @@
 #include "GameObject.h"
 #include "IGameWorld.h"
 #include "IScene.h"
-#include "json.h"
+#include "LevelData.h"
 #include "Player.h"
 #include "Video.h"
 #include <SDL3/SDL_events.h>
@@ -17,7 +17,7 @@
 
 class PlatformerScene : public IScene, public IGameWorld {
 private:
-    std::shared_ptr<JsonValue> levelData;
+    std::shared_ptr<LevelData> levelData;
     std::vector<std::shared_ptr<GameObject>> objects;
     std::weak_ptr<Player> player;
     Transform camera;
@@ -28,7 +28,7 @@ private:
     Uint64 startMS;
 public:
     PlatformerScene() = delete;
-    PlatformerScene(std::shared_ptr<JsonValue> levelData) : levelData(levelData) {}
+    PlatformerScene(std::shared_ptr<LevelData> levelData) : levelData(levelData) {}
     ~PlatformerScene() = default;
 
     void initialize(ISceneManager* sceneManager) override;

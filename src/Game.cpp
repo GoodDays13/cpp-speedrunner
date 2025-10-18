@@ -1,5 +1,7 @@
 #include "Game.h"
 #include "JsonReader.h"
+#include "LevelData.h"
+#include "LevelLoader.h"
 #include "PlatformerScene.h"
 #include "TitleScreen.h"
 #include "Video.h"
@@ -100,16 +102,10 @@ void Game::queueSwitchToScene(std::unique_ptr<IScene> scene) {
 }
 
 void Game::startLevel(std::string levelName) {
-    std::string levelPath = SDL_GetBasePath();
-    levelPath += "assets/levels/" + levelName;
-    SDL_IOStream* stream = SDL_IOFromFile(levelPath.c_str(), "r");
-    if (!stream) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", SDL_GetError());
-        return;
-    }
-    auto jsonReader = JsonReader(stream);
-    SDL_CloseIO(stream);
-    auto jsonValue = std::make_shared<JsonValue>(jsonReader.readJsonFile());
-    auto platformerScene = std::make_unique<PlatformerScene>(jsonValue);
+    auto levelDataOptional = LevelLoader::loadLevel(levelName);
+    if (!levelDataOptional)
+        queueSwitchToScene(std::make_unique<TitleScreen>());
+    auto levelData = std::make_shared<LevelData>(levelDataOptional.value());
+    auto platformerScene = std::make_unique<PlatformerScene>(levelData);
     queueSwitchToScene(std::move(platformerScene));
 }

@@ -53,6 +53,7 @@ add_executable(speedrunner
         src/PlatformerScene.cpp
         src/GameObject.cpp
         src/Player.cpp
+        src/LevelLoader.cpp
         src/JsonReader.cpp
 )
 
