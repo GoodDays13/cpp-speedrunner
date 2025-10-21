@@ -8,10 +8,10 @@ enum Tags {
     Floor =     1 << 0,
     End =       1 << 1,
     Kill =      1 << 2,
-    NoDraw =   1 << 3
+    NoDraw =    1 << 3
 };
 
-struct Object {
+struct ObjectData {
     Transform transform;
     Vector4 color;
     uint32_t tags;
@@ -22,5 +22,5 @@ struct LevelData {
         Transform transform;
         Vector4 color;
     } player;
-    std::vector<Object> objects;
+    std::vector<ObjectData> objects;
 };

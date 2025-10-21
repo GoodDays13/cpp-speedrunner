@@ -85,7 +85,7 @@ std::optional<LevelData> LevelLoader::loadJsonLevel(SDL_IOStream* stream) {
 
     for (int i = 0; i < objects.size(); i++) {
         JsonValue object = jsonValue["objects"][i];
-        Object obj = {
+        ObjectData obj = {
             { // transform
                 Vector2( // position
                     object["position"]["x"].getDouble(),
@@ -122,9 +122,9 @@ std::optional<LevelData> LevelLoader::loadJsonLevel(SDL_IOStream* stream) {
 
 std::optional<LevelData> LevelLoader::loadBinaryLevel(SDL_IOStream* stream) {
     LevelData level_data;
-    SDL_ReadIO(stream, &level_data, sizeof(LevelData) - sizeof(std::vector<struct Object>));
-    Object obj;
-    while (SDL_ReadIO(stream, &obj, sizeof(struct Object)) == sizeof(struct Object)) {
+    SDL_ReadIO(stream, &level_data, sizeof(LevelData) - sizeof(std::vector<struct ObjectData>));
+    ObjectData obj;
+    while (SDL_ReadIO(stream, &obj, sizeof(struct ObjectData)) == sizeof(struct ObjectData)) {
         level_data.objects.push_back(obj);
     }
     return level_data;

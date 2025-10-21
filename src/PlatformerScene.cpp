@@ -45,7 +45,7 @@ void PlatformerScene::loadLevel() {
     objects.push_back(playerPtr);
 
     // for (int i = 0; i < objectsData.size(); i++) {
-    for (Object object : levelData->objects) {
+    for (ObjectData object : levelData->objects) {
         auto obj = createGameObject().lock();
         obj->transform = object.transform;
         obj->color = object.color;
