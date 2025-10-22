@@ -2,50 +2,39 @@
 #include "JsonReader.h"
 #include "LevelData.h"
 #include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_log.h>
 #include <cstdint>
 #include <optional>
 #include <string>
 
 std::optional<LevelData> LevelLoader::loadLevel(const std::string& levelName) {
+    SDL_IOStream* stream = nullptr;
+    std::optional<LevelData> result = std::nullopt;
     std::string levelPath = SDL_GetBasePath();
     levelPath += "assets/levels/" + levelName;
 
-    Format format = detectFormat(levelName);
-    if (format == Format::UNKNOWN) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown level format: %s", levelName.c_str());
-        return std::nullopt;
-    }
-
-    SDL_IOStream* stream = SDL_IOFromFile(levelPath.c_str(), (format == Format::JSON) ? "r" : "rb");
-    if (!stream) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", SDL_GetError());
-        return std::nullopt;
-    }
-
-    std::optional<LevelData> result = std::nullopt;
-    switch (format) {
-        case Format::JSON:
+    if (levelName.ends_with(".json")) {
+        stream = SDL_IOFromFile(levelPath.c_str(), "r");
+        if (!stream) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", SDL_GetError());
+        } else {
             result = loadJsonLevel(stream);
-            break;
-        case Format::BINARY:
+        }
+    } else if (levelName.ends_with(".bin") || levelName.ends_with(".lvl")) {
+        stream = SDL_IOFromFile(levelPath.c_str(), "rb");
+        if (!stream) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", SDL_GetError());
+        } else {
             result = loadBinaryLevel(stream);
-            break;
-        case Format::UNKNOWN:
-            break;
+        }
+    } else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown level format: %s", levelName.c_str());
     }
-    SDL_CloseIO(stream);
+
+    if (stream) SDL_CloseIO(stream);
+
     return result;
-}
-
-LevelLoader::Format LevelLoader::detectFormat(const std::string& filename) {
-    if (filename.ends_with(".json"))
-        return Format::JSON;
-    else if (filename.ends_with(".bin") || filename.ends_with(".lvl"))
-        return Format::BINARY;
-    else
-        return Format::UNKNOWN;
-
 }
 
 std::optional<LevelData> LevelLoader::loadJsonLevel(SDL_IOStream* stream) {
