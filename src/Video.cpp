@@ -364,6 +364,7 @@ void Video::render(RenderInfo info) {
         SDL_BindGPUFragmentSamplers(render, 0, &samplerBinding, 1);
         SDL_DrawGPUIndexedPrimitives(render, 6, 1, 0, 0, 0);
         SDL_EndGPURenderPass(render);
+        SDL_ReleaseGPUSampler(gpuDevice, sampler);
     }
 
 
