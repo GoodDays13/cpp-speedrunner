@@ -2,7 +2,12 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_gpu.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
+#include <map>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "math.h"
@@ -17,19 +22,35 @@ using MeshHandle = unsigned int;
 
 class Video {
 public:
+    class Spritesheet {
+    private:
+        SDL_GPUTextureSamplerBinding *textureSampler;
+    public:
+        // Amount of sprites wide
+        Uint8 width;
+        // Amount of sprites tall
+        Uint8 height;
+    };
     enum Model {
-        QUAD
+        QUAD,
+        SPRITE,
     };
     struct MiscData {
         Transform transform;
         Vector4 color;
+        unsigned int id;
     };
-    struct InstanceInfo {
+    struct RenderKey {
         Model model;
-        MiscData data;
+        std::string spritesheet;
+
+        bool operator<(const RenderKey& other) const {
+            if (model != other.model) return model < other.model;
+            return spritesheet < other.spritesheet;
+        }
     };
     struct RenderInfo {
-        std::vector<InstanceInfo> instances;
+        std::map<RenderKey, std::vector<MiscData>> renderBatches;
         Transform camera;
     };
 
@@ -69,6 +90,7 @@ private:
     SDL_GPUTransferBuffer* miscTransferBuffers[3];
     SDL_GPUFence* inFlightFrames[3] = {nullptr, nullptr, nullptr};
     unsigned int frameIndex = 0;
+    std::unordered_map<std::string, Spritesheet> spritesheets;
 
     bool initWindow();
     bool initGraphics();

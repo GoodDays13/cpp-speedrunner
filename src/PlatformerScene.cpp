@@ -110,9 +110,11 @@ void PlatformerScene::update(float deltaTime) {
 
 Video::RenderInfo PlatformerScene::render() {
     Video::RenderInfo info;
+    Video::RenderKey regular = { Video::QUAD };
+
     for (int i = 0; i < objects.size(); i++) {
         if (~objects[i]->tags & Tags::NoDraw)
-            info.instances.push_back({Video::QUAD, objects[i]->transform, objects[i]->color});
+            info.renderBatches[regular].push_back({objects[i]->transform, objects[i]->color});
     }
     info.camera = camera;
     return info;

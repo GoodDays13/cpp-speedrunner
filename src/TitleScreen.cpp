@@ -1,4 +1,5 @@
 #include "TitleScreen.h"
+#include "Video.h"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_scancode.h>
 
@@ -85,13 +86,14 @@ void TitleScreen::update(float deltaTime) {
 Video::RenderInfo TitleScreen::render() {
     Video::RenderInfo info;
 
+    Video::RenderKey regular = { Video::QUAD };
+
     // Add title
-    info.instances.push_back({Video::QUAD, {title.transform, {0, 1, 1, 1}}});
+    info.renderBatches[regular].push_back({title.transform, {0, 1, 1, 1}});
 
     for (size_t i = 0; i < menuItems.size(); i++) {
         Vector4 color = (i == selectedItem) ? Vector4{1, 1, 0, 1} : Vector4{1, 1, 1, 1}; // Highlight selected item in yellow
-        Video::InstanceInfo menuItem = {Video::QUAD, {menuItems[i].second.transform, color}};
-        info.instances.push_back(menuItem);
+        info.renderBatches[regular].push_back({menuItems[i].second.transform, color});
     }
 
     info.camera = {{0, 0}, {16, 9}};

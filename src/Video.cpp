@@ -128,7 +128,7 @@ void Video::createPipeline() {
 
     // misc instance buffer
     vertex_buffer_descriptions[1].slot = 1;
-    vertex_buffer_descriptions[1].pitch = sizeof(Vector2) * 2 + sizeof(Vector4);
+    vertex_buffer_descriptions[1].pitch = sizeof(MiscData);
     vertex_buffer_descriptions[1].input_rate = SDL_GPU_VERTEXINPUTRATE_INSTANCE;
     vertex_attributes[2].location = 2;
     vertex_attributes[2].buffer_slot = 1;
@@ -262,8 +262,14 @@ void Video::render(RenderInfo info) {
     MiscData* instanceData = (MiscData*)miscMap;
 
     // TODO: Add detection for overflow of buffer
-    for (int i = 0; i < info.instances.size(); i++) {
-        instanceData[i] = info.instances[i].data;
+    std::map<RenderKey, int> memorySections;
+    i = 0;
+    for (auto& [key, batch] : info.renderBatches) {
+        memorySections[key] = i;
+        for (MiscData data : batch) {
+            instanceData[i] = data;
+            i++;
+        }
     }
 
     SDL_UnmapGPUTransferBuffer(gpuDevice, miscTransferBuffer);
@@ -274,7 +280,7 @@ void Video::render(RenderInfo info) {
     miscSrc.transfer_buffer = miscTransferBuffer;
     SDL_GPUBufferRegion miscDst = {};
     miscDst.buffer = miscBuffer;
-    miscDst.size = sizeof(MiscData) * info.instances.size();
+    miscDst.size = sizeof(MiscData) * i;
 
     SDL_UploadToGPUBuffer(copypass, &miscSrc, &miscDst, false);
 
@@ -330,13 +336,16 @@ void Video::render(RenderInfo info) {
     colors.texture = intermediates[currentIntermediate];
     SDL_GPURenderPass *render = SDL_BeginGPURenderPass(cmd, &colors, 1, NULL);
 
-    SDL_BindGPUGraphicsPipeline(render, graphicsPipeline);
     SDL_SetGPUViewport(render, &viewport);
 
     SDL_BindGPUVertexBuffers(render, 0, bindings, 2);
     SDL_BindGPUIndexBuffer(render, bindings + 2, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 
-    SDL_DrawGPUIndexedPrimitives(render, 6, info.instances.size(), 0, 0, 0);
+    for (auto& [key, instanceData] : info.renderBatches) {
+        SDL_BindGPUGraphicsPipeline(render, graphicsPipeline);
+
+        SDL_DrawGPUIndexedPrimitives(render, 6, instanceData.size(), 0, 0, memorySections[key]);
+    }
 
     SDL_EndGPURenderPass(render);
 
