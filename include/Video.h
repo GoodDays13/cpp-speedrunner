@@ -6,6 +6,7 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <map>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -22,15 +23,6 @@ using MeshHandle = unsigned int;
 
 class Video {
 public:
-    class Spritesheet {
-    private:
-        SDL_GPUTextureSamplerBinding *textureSampler;
-    public:
-        // Amount of sprites wide
-        Uint8 width;
-        // Amount of sprites tall
-        Uint8 height;
-    };
     enum Model {
         QUAD,
         SPRITE,
@@ -38,7 +30,7 @@ public:
     struct MiscData {
         Transform transform;
         Vector4 color;
-        unsigned int id;
+        unsigned int index;
     };
     struct RenderKey {
         Model model;
@@ -61,6 +53,13 @@ public:
     const SDL_DisplayMode* getDisplayMode() const;
     Vector2 convertPixelToGame(Vector2 pixel, Transform camera) const;
 private:
+    struct Spritesheet {
+        SDL_GPUTexture* texture;
+        // Amount of sprites wide
+        unsigned int width;
+        // Amount of sprites tall
+        unsigned int height;
+    };
     struct Vertex {
         Vector2 position;
         Vector2 uv;
@@ -90,7 +89,9 @@ private:
     SDL_GPUTransferBuffer* miscTransferBuffers[3];
     SDL_GPUFence* inFlightFrames[3] = {nullptr, nullptr, nullptr};
     unsigned int frameIndex = 0;
-    std::unordered_map<std::string, Spritesheet> spritesheets;
+    SDL_GPUSampler *clampSampler;
+    std::unordered_map<std::string, std::unique_ptr<Spritesheet>> spritesheets;
+    void loadSpritesheet(std::string path, int width, int height);
 
     bool initWindow();
     bool initGraphics();

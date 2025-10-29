@@ -63,16 +63,18 @@ target_include_directories(speedrunner PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_include_directories(speedrunner PRIVATE "${CMAKE_BINARY_DIR}/generated")
 
 find_package(SDL3 REQUIRED)
+find_package(SDL3_image REQUIRED)
 
 if(SDL3_STATIC)
-	target_link_libraries(speedrunner ${SDL3_STATIC_LIBRARIES})
+    target_link_libraries(speedrunner SDL3_image::SDL3_image-static SDL3::SDL3-static)
 else()
-	target_link_libraries(speedrunner ${SDL3_LIBRARIES})
+    target_link_libraries(speedrunner PRIVATE SDL3_image::SDL3_image SDL3::SDL3)
 endif()
 
 set(DIST_DIR ${CMAKE_BINARY_DIR}/out)
 set(ASSET_DIRS
     assets/levels
+    assets/fonts
 )
 
 file(MAKE_DIRECTORY ${DIST_DIR})

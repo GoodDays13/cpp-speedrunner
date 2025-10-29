@@ -1,11 +1,16 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_gpu.h>
+#include <SDL3_image/SDL_image.h>
 #include <cmath>
+#include <memory>
 
 #include "Video.h"
 #include "shaders.h"
@@ -63,41 +68,69 @@ bool Video::initGraphics() {
 
     initIntermediateTextures();
 
+    loadSpritesheet("", 1, 1);
+    loadSpritesheet("fonts/x05mo.png", 15, 8);
+
     return true;
 }
 
 void Video::loadShaders() {
-    SDL_GPUShaderCreateInfo shader_info = {};
-    shader_info.code_size = vertex_vert_spv_len;
-    shader_info.code = vertex_vert_spv;
-    shader_info.entrypoint = "main";
-    shader_info.format = SDL_GPU_SHADERFORMAT_SPIRV;
-    shader_info.stage = SDL_GPU_SHADERSTAGE_VERTEX;
-    shader_info.num_uniform_buffers = 1;
+    SDL_GPUShaderCreateInfo shader_info;
+    shader_info = {
+        .code_size = vertex_vert_spv_len,
+        .code = vertex_vert_spv,
+        .entrypoint = "main",
+        .format = SDL_GPU_SHADERFORMAT_SPIRV,
+        .stage = SDL_GPU_SHADERSTAGE_VERTEX,
+        .num_uniform_buffers = 2,
+    };
 
     SHADER_VERTEX = SDL_CreateGPUShader(gpuDevice, &shader_info);
 
-    shader_info.stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
-    shader_info.code_size = fragment_frag_spv_len;
-    shader_info.code = fragment_frag_spv;
-
-    SHADER_FRAGMENT = SDL_CreateGPUShader(gpuDevice, &shader_info);
-
-    shader_info.stage = SDL_GPU_SHADERSTAGE_VERTEX;
-    shader_info.code_size = fullscreen_vert_spv_len;
-    shader_info.code = fullscreen_vert_spv;
+    shader_info = {
+        .code_size = fullscreen_vert_spv_len,
+        .code = fullscreen_vert_spv,
+        .entrypoint = "main",
+        .format = SDL_GPU_SHADERFORMAT_SPIRV,
+        .stage = SDL_GPU_SHADERSTAGE_VERTEX,
+        .num_uniform_buffers = 1,
+    };
 
     SHADER_FULLSCREEN = SDL_CreateGPUShader(gpuDevice, &shader_info);
 
-    shader_info.stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
-    shader_info.code_size = boxblur_frag_spv_len;
-    shader_info.code = boxblur_frag_spv;
-    shader_info.num_samplers = 1;
+    shader_info = {
+        .code_size = fragment_frag_spv_len,
+        .code = fragment_frag_spv,
+        .entrypoint = "main",
+        .format = SDL_GPU_SHADERFORMAT_SPIRV,
+        .stage = SDL_GPU_SHADERSTAGE_FRAGMENT,
+        .num_samplers = 1,
+        .num_uniform_buffers = 1,
+    };
+
+    SHADER_FRAGMENT = SDL_CreateGPUShader(gpuDevice, &shader_info);
+
+    shader_info = {
+        .code_size = boxblur_frag_spv_len,
+        .code = boxblur_frag_spv,
+        .entrypoint = "main",
+        .format = SDL_GPU_SHADERFORMAT_SPIRV,
+        .stage = SDL_GPU_SHADERSTAGE_FRAGMENT,
+        .num_samplers = 1,
+        .num_uniform_buffers = 1,
+    };
 
     SHADER_BOXBLUR = SDL_CreateGPUShader(gpuDevice, &shader_info);
 
-    shader_info.code_size = conway_frag_spv_len;
-    shader_info.code = conway_frag_spv;
+    shader_info = {
+        .code_size = conway_frag_spv_len,
+        .code = conway_frag_spv,
+        .entrypoint = "main",
+        .format = SDL_GPU_SHADERFORMAT_SPIRV,
+        .stage = SDL_GPU_SHADERSTAGE_FRAGMENT,
+        .num_samplers = 1,
+        .num_uniform_buffers = 1,
+    };
 
     SHADER_CONWAY = SDL_CreateGPUShader(gpuDevice, &shader_info);
 }
@@ -109,8 +142,8 @@ void Video::createPipeline() {
 
     SDL_GPUVertexBufferDescription vertex_buffer_descriptions[2] = {};
     pipelineinfo.vertex_input_state.num_vertex_buffers = 2;
-    SDL_GPUVertexAttribute vertex_attributes[5] = {};
-    pipelineinfo.vertex_input_state.num_vertex_attributes = 5;
+    SDL_GPUVertexAttribute vertex_attributes[6] = {};
+    pipelineinfo.vertex_input_state.num_vertex_attributes = 6;
     pipelineinfo.vertex_input_state.vertex_buffer_descriptions = vertex_buffer_descriptions;
     pipelineinfo.vertex_input_state.vertex_attributes = vertex_attributes;
 
@@ -126,6 +159,7 @@ void Video::createPipeline() {
     vertex_attributes[1].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
     vertex_attributes[1].offset = sizeof(Vector2);
 
+    MiscData ref = {};
     // misc instance buffer
     vertex_buffer_descriptions[1].slot = 1;
     vertex_buffer_descriptions[1].pitch = sizeof(MiscData);
@@ -136,11 +170,15 @@ void Video::createPipeline() {
     vertex_attributes[3].location = 3;
     vertex_attributes[3].buffer_slot = 1;
     vertex_attributes[3].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
-    vertex_attributes[3].offset = sizeof(Vector2);
+    vertex_attributes[3].offset = (char*)&ref.transform.scale - (char*)&ref;
     vertex_attributes[4].location = 4;
     vertex_attributes[4].buffer_slot = 1;
     vertex_attributes[4].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4;
-    vertex_attributes[4].offset = sizeof(Vector2) * 2;
+    vertex_attributes[4].offset = (char*)&ref.color - (char*)&ref;
+    vertex_attributes[5].location = 5;
+    vertex_attributes[5].buffer_slot = 1;
+    vertex_attributes[5].format = SDL_GPU_VERTEXELEMENTFORMAT_UINT;
+    vertex_attributes[5].offset = (char*)&ref.index - (char*)&ref;
 
     pipelineinfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
 
@@ -148,6 +186,15 @@ void Video::createPipeline() {
     pipelineinfo.target_info.num_color_targets = 1;
     pipelineinfo.target_info.color_target_descriptions = &color_target;
     color_target.format = SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM;
+    color_target.blend_state = {
+        .src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+        .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+        .color_blend_op = SDL_GPU_BLENDOP_ADD,
+        .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+        .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+        .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
+        .enable_blend = true,
+    };
 
     graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpuDevice, &pipelineinfo);
 
@@ -231,6 +278,14 @@ void Video::createBuffersAndGeometry() {
     SDL_EndGPUCopyPass(copypass);
     SDL_SubmitGPUCommandBuffer(cmd);
     SDL_ReleaseGPUTransferBuffer(gpuDevice, transfer);
+
+    // Create samplers
+    SDL_GPUSamplerCreateInfo samplerInfo = {
+        .address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+        .address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+    };
+
+    clampSampler = SDL_CreateGPUSampler(gpuDevice, &samplerInfo);
 }
 
 void Video::initIntermediateTextures() {
@@ -244,6 +299,77 @@ void Video::initIntermediateTextures() {
     intermediateInfo.sample_count = SDL_GPU_SAMPLECOUNT_1;
     intermediates[0] = SDL_CreateGPUTexture(gpuDevice, &intermediateInfo);
     intermediates[1] = SDL_CreateGPUTexture(gpuDevice, &intermediateInfo);
+}
+
+void Video::loadSpritesheet(std::string path, int width, int height) {
+    if (spritesheets.find(path) != spritesheets.end())
+        return;
+
+    SDL_GPUTransferBufferCreateInfo transferInfo = {
+        .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+        .size = 4,
+    };
+    SDL_Surface *surface = NULL;
+    if (!path.empty()) {
+        std::string sheetPath = SDL_GetBasePath();
+
+        sheetPath += "assets/" + path;
+        SDL_IOStream *stream = SDL_IOFromFile(sheetPath.c_str(), "rb");
+
+        if (!stream) {
+            SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not read spritesheet: %s", SDL_GetError());
+            return;
+        }
+
+        surface = IMG_Load_IO(stream, true);
+
+        // SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
+        transferInfo.size = static_cast<Uint32>(surface->w * surface->h * 4);
+    }
+
+    SDL_GPUTransferBuffer* transfer = SDL_CreateGPUTransferBuffer(gpuDevice, &transferInfo);
+
+    Uint32 *map = (Uint32*)SDL_MapGPUTransferBuffer(gpuDevice, transfer, false);
+
+    if (path.empty()) {
+        *map = 0xffffffff;
+    } else {
+        for (int i = 0; i < surface->w * surface->h; i++) {
+            map[i] = ((Uint32*)surface->pixels)[i];
+        }
+    }
+
+    SDL_UnmapGPUTransferBuffer(gpuDevice, transfer);
+
+    SDL_GPUTextureCreateInfo textureInfo = {
+        .format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+        .usage = SDL_GPU_TEXTUREUSAGE_SAMPLER,
+        .width = path.empty() ? 1 : (Uint32)surface->w,
+        .height = path.empty() ? 1 : (Uint32)surface->h,
+        .layer_count_or_depth = 1,
+        .num_levels = 1,
+        .sample_count = SDL_GPU_SAMPLECOUNT_1,
+    };
+    SDL_GPUTexture* texture = SDL_CreateGPUTexture(gpuDevice, &textureInfo);
+
+    SDL_GPUTextureTransferInfo src = { transfer };
+
+    SDL_GPUTextureRegion dest = {
+        .texture = texture,
+        .w = path.empty() ? 1 : static_cast<Uint32>(surface->w),
+        .h = path.empty() ? 1 : static_cast<Uint32>(surface->h),
+        .d = 1,
+    };
+
+    SDL_GPUCommandBuffer *cmd = SDL_AcquireGPUCommandBuffer(gpuDevice);
+    SDL_GPUCopyPass *copypass = SDL_BeginGPUCopyPass(cmd);
+    SDL_UploadToGPUTexture(copypass, &src, &dest, false);
+    SDL_EndGPUCopyPass(copypass);
+    SDL_SubmitGPUCommandBuffer(cmd);
+    SDL_DestroySurface(surface);
+    SDL_ReleaseGPUTransferBuffer(gpuDevice, transfer);
+
+    spritesheets[path] = std::make_unique<Spritesheet>(texture, width, height);
 }
 
 void Video::render(RenderInfo info) {
@@ -263,12 +389,12 @@ void Video::render(RenderInfo info) {
 
     // TODO: Add detection for overflow of buffer
     std::map<RenderKey, int> memorySections;
-    i = 0;
+    int batchCount = 0;
     for (auto& [key, batch] : info.renderBatches) {
-        memorySections[key] = i;
+        memorySections[key] = batchCount;
         for (MiscData data : batch) {
-            instanceData[i] = data;
-            i++;
+            instanceData[batchCount] = data;
+            batchCount++;
         }
     }
 
@@ -280,7 +406,7 @@ void Video::render(RenderInfo info) {
     miscSrc.transfer_buffer = miscTransferBuffer;
     SDL_GPUBufferRegion miscDst = {};
     miscDst.buffer = miscBuffer;
-    miscDst.size = sizeof(MiscData) * i;
+    miscDst.size = sizeof(MiscData) * batchCount;
 
     SDL_UploadToGPUBuffer(copypass, &miscSrc, &miscDst, false);
 
@@ -341,8 +467,21 @@ void Video::render(RenderInfo info) {
     SDL_BindGPUVertexBuffers(render, 0, bindings, 2);
     SDL_BindGPUIndexBuffer(render, bindings + 2, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 
+    SDL_BindGPUGraphicsPipeline(render, graphicsPipeline);
+
     for (auto& [key, instanceData] : info.renderBatches) {
-        SDL_BindGPUGraphicsPipeline(render, graphicsPipeline);
+        auto findSheet = spritesheets.find(key.spritesheet);
+        if (findSheet == spritesheets.end()) {
+            SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Spritesheet not loaded: %s\n", key.spritesheet.c_str());
+            continue;
+        }
+        Spritesheet *sheet = findSheet->second.get();
+
+        SDL_GPUTextureSamplerBinding samplerBinding = {};
+        samplerBinding.sampler = clampSampler;
+        samplerBinding.texture = sheet->texture;
+        SDL_BindGPUFragmentSamplers(render, 0, &samplerBinding, 1);
+        SDL_PushGPUVertexUniformData(cmd, 1, &sheet->width, 2 * sizeof(unsigned int));
 
         SDL_DrawGPUIndexedPrimitives(render, 6, instanceData.size(), 0, 0, memorySections[key]);
     }
@@ -352,13 +491,8 @@ void Video::render(RenderInfo info) {
 
     // Post-Processing Passes
     if (conwayActive) {
-        SDL_GPUSamplerCreateInfo samplerInfo = {};
         SDL_GPUTextureSamplerBinding samplerBinding = {};
-        samplerInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-        samplerInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-
-        SDL_GPUSampler* sampler = SDL_CreateGPUSampler(gpuDevice, &samplerInfo);
-        samplerBinding.sampler = sampler;
+        samplerBinding.sampler = clampSampler;
 
         samplerBinding.texture = intermediates[currentIntermediate];
         currentIntermediate = (currentIntermediate + 1) % 2;
@@ -373,7 +507,6 @@ void Video::render(RenderInfo info) {
         SDL_BindGPUFragmentSamplers(render, 0, &samplerBinding, 1);
         SDL_DrawGPUIndexedPrimitives(render, 6, 1, 0, 0, 0);
         SDL_EndGPURenderPass(render);
-        SDL_ReleaseGPUSampler(gpuDevice, sampler);
     }
 
 
@@ -418,6 +551,7 @@ void Video::cleanup() {
         SDL_ReleaseGPUShader(gpuDevice, shaders[i]);
     for (int i = 0; i < 2; i++)
         SDL_ReleaseGPUTexture(gpuDevice, intermediates[i]);
+    SDL_ReleaseGPUSampler(gpuDevice, clampSampler);
     SDL_ReleaseWindowFromGPUDevice(gpuDevice, window);
     SDL_DestroyGPUDevice(gpuDevice);
     SDL_DestroyWindow(window);

@@ -91,6 +91,14 @@ Video::RenderInfo TitleScreen::render() {
     // Add title
     info.renderBatches[regular].push_back({title.transform, {0, 1, 1, 1}});
 
+    int i = 0;
+    for (char c : "Hello, I am GOD!") {
+        if (c == '\0')
+            break;
+        info.renderBatches[{Video::SPRITE, "fonts/x05mo.png"}].push_back({{{static_cast<float>(-7.5 + i), -4}, {1, 1}}, {1, 1, 1, 1}, static_cast<unsigned int>(c - ' ')});
+        i++;
+    }
+
     for (size_t i = 0; i < menuItems.size(); i++) {
         Vector4 color = (i == selectedItem) ? Vector4{1, 1, 0, 1} : Vector4{1, 1, 1, 1}; // Highlight selected item in yellow
         info.renderBatches[regular].push_back({menuItems[i].second.transform, color});
