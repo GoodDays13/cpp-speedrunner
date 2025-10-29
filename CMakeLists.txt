@@ -55,6 +55,7 @@ add_executable(speedrunner
         src/Player.cpp
         src/LevelLoader.cpp
         src/JsonReader.cpp
+        src/Text.cpp
 )
 
 add_dependencies(speedrunner embed_shaders)

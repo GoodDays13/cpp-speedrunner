@@ -1,7 +1,9 @@
 #include "TitleScreen.h"
+#include "Text.h"
 #include "Video.h"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_scancode.h>
+#include <string>
 
 void TitleScreen::initialize(ISceneManager* sceneManager) {
     this->sceneManager = sceneManager;
@@ -91,12 +93,11 @@ Video::RenderInfo TitleScreen::render() {
     // Add title
     info.renderBatches[regular].push_back({title.transform, {0, 1, 1, 1}});
 
-    int i = 0;
-    for (char c : "Hello, I am GOD!") {
-        if (c == '\0')
-            break;
-        info.renderBatches[{Video::SPRITE, "fonts/x05mo.png"}].push_back({{{static_cast<float>(-7.5 + i), -4}, {1, 1}}, {1, 1, 1, 1}, static_cast<unsigned int>(c - ' ')});
-        i++;
+    std::string quit = "Quit";
+    Text start = Text("Start", menuItems[0].second.transform, {"fonts/x05mo.png"}, Text::Align::Center);
+    info.renderBatches[start.getKey()].append_range(start.getData());
+    for (int i = 0; i < quit.length(); i++) {
+        info.renderBatches[{Video::SPRITE, "fonts/x05mo.png"}].push_back({{{static_cast<float>(quit.length()) / -2.0f + 0.5f + i, menuItems[1].second.transform.position.y}, {1, 1}}, {1, 1, 1, 1}, static_cast<unsigned int>(quit[i] - ' ')});
     }
 
     for (size_t i = 0; i < menuItems.size(); i++) {
