@@ -1,13 +1,18 @@
 #pragma once
 #include "GameObject.h"
 #include "IScene.h"
+#include "Text.h"
 #include <functional>
-#include <utility>
 
 class TitleScreen : public IScene {
 private:
+    struct MenuItem {
+        std::function<void()> callback;
+        GameObject object;
+        Text text;
+    };
     GameObject title;
-    std::vector<std::pair<std::function<void()>, GameObject>> menuItems;
+    std::vector<MenuItem> menuItems;
     size_t selectedItem = 0;
 public:
     void initialize(ISceneManager* sceneManager) override;

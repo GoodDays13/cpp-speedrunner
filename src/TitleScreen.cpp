@@ -16,16 +16,24 @@ void TitleScreen::initialize(ISceneManager* sceneManager) {
     GameObject startGame = GameObject();
     startGame.transform.position = {0, 1};
     startGame.transform.scale = {6, 1};
-    menuItems.push_back({[this]() {
-        this->sceneManager->startLevel("shrine_of.lvl");
-    }, startGame});
+    menuItems.push_back({
+        [this]() {
+            this->sceneManager->startLevel("shrine_of.lvl");
+        },
+        startGame,
+        Text("Start", startGame.transform, {"fonts/x05mo.png"}, Text::Align::Center)
+    });
 
     GameObject quitGame = GameObject();
     quitGame.transform.position = {0, -1};
     quitGame.transform.scale = {6, 1};
-    menuItems.push_back({[this]() {
-        this->sceneManager->queuePopScene(this);
-    }, quitGame});
+    menuItems.push_back({
+        [this]() {
+            this->sceneManager->queuePopScene(this);
+        },
+        quitGame,
+        Text("Quit", quitGame.transform, {"fonts/x05mo.png"}, Text::Align::Center)
+    });
 }
 
 void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
@@ -35,7 +43,7 @@ void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
             case SDL_SCANCODE_KP_ENTER:
             case SDL_SCANCODE_RETURN: {
                 if (selectedItem < menuItems.size()) {
-                    menuItems[selectedItem].first();
+                    menuItems[selectedItem].callback();
                 }
                 break;
             } case SDL_SCANCODE_ESCAPE:
@@ -65,7 +73,7 @@ void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
         Vector2 mousePos = video.convertPixelToGame({event.motion.x, event.motion.y}, {{0, 0}, {16, 9}});
         selectedItem = menuItems.size(); // Deselect if not hovering over any item
         for (size_t i = 0; i < menuItems.size(); i++) {
-            GameObject& item = menuItems[i].second;
+            GameObject& item = menuItems[i].object;
             if (mousePos.x >= item.transform.position.x - item.transform.scale.x / 2 &&
                 mousePos.x <= item.transform.position.x + item.transform.scale.x / 2 &&
                 mousePos.y >= item.transform.position.y - item.transform.scale.y / 2 &&
@@ -77,7 +85,7 @@ void TitleScreen::handleEvent(SDL_Event event, const Video& video) {
         if (event.button.button == SDL_BUTTON_LEFT) {
             Vector2 mousePos = video.convertPixelToGame({event.button.x, event.button.y}, {{0, 0}, {16, 9}});
             if (selectedItem < menuItems.size())
-                menuItems[selectedItem].first();
+                menuItems[selectedItem].callback();
         }
     }
 }
@@ -94,15 +102,10 @@ Video::RenderInfo TitleScreen::render() {
     info.renderBatches[regular].push_back({title.transform, {0, 1, 1, 1}});
 
     std::string quit = "Quit";
-    Text start = Text("Start", menuItems[0].second.transform, {"fonts/x05mo.png"}, Text::Align::Center);
-    info.renderBatches[start.getKey()].append_range(start.getData());
-    for (int i = 0; i < quit.length(); i++) {
-        info.renderBatches[{Video::SPRITE, "fonts/x05mo.png"}].push_back({{{static_cast<float>(quit.length()) / -2.0f + 0.5f + i, menuItems[1].second.transform.position.y}, {1, 1}}, {1, 1, 1, 1}, static_cast<unsigned int>(quit[i] - ' ')});
-    }
-
     for (size_t i = 0; i < menuItems.size(); i++) {
         Vector4 color = (i == selectedItem) ? Vector4{1, 1, 0, 1} : Vector4{1, 1, 1, 1}; // Highlight selected item in yellow
-        info.renderBatches[regular].push_back({menuItems[i].second.transform, color});
+        info.renderBatches[regular].push_back({menuItems[i].object.transform, color});
+        info.renderBatches[menuItems[i].text.getKey()].append_range(menuItems[i].text.getData());
     }
 
     info.camera = {{0, 0}, {16, 9}};
