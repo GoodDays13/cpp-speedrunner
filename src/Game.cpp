@@ -5,6 +5,7 @@
 #include "PlatformerScene.h"
 #include "TitleScreen.h"
 #include "Video.h"
+#include <SDL3/SDL_events.h>
 #include <memory>
 
 bool Game::initialize() {
@@ -41,6 +42,11 @@ void Game::run() {
             if (event.type == SDL_EVENT_QUIT) {
                 isRunning = false;
             } else {
+                if (event.type == SDL_EVENT_KEY_DOWN) {
+                    SDL_HideCursor();
+                } else if (event.type == SDL_EVENT_MOUSE_MOTION) {
+                    SDL_ShowCursor();
+                }
                 sceneStack.back()->handleEvent(event, *video);
             }
         }
