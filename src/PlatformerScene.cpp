@@ -1,4 +1,5 @@
 #include "PlatformerScene.h"
+#include "EndScreen.h"
 #include "GameObject.h"
 #include "LevelData.h"
 #include "TitleScreen.h"
@@ -124,9 +125,14 @@ void PlatformerScene::completeLevel() {
     Uint64 completionTimeMS = SDL_GetTicks() - startMS;
     float completionTimeSec = static_cast<float>(completionTimeMS) / 1000.0f;
 
-    SDL_Log("Time to complete: %.4f", completionTimeSec);
+    SDL_Log("Time to complete: %.3f", completionTimeSec);
 
-    sceneManager->queueSwitchToScene(std::make_unique<TitleScreen>());
+    EndScreenData data = {
+        .completionTimeMS = completionTimeMS
+    };
+
+    SDL_Log("Creating End Screen");
+    sceneManager->queuePushScene(std::make_unique<EndScreen>(data));
 }
 
 std::optional<Collision> PlatformerScene::checkCollisions(const GameObject& obj) {

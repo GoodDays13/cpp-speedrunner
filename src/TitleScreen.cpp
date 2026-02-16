@@ -18,7 +18,7 @@ void TitleScreen::initialize(ISceneManager* sceneManager) {
     startGame.transform.scale = {6, 1};
     menuItems.push_back({
         [this]() {
-            this->sceneManager->startLevel("shrine_of.lvl");
+            this->sceneManager->startLevel();
         },
         startGame,
         Text("Start", startGame.transform, {"fonts/x05mo.png"}, Text::Align::Center)

@@ -16,6 +16,9 @@ bool Game::initialize() {
 
     framerateLimit = video->getDisplayMode()->refresh_rate;
 
+    levelOrder = {"shrine_of.lvl", "test-kill.lvl"};
+    currentLevelIndex = 0;
+
     return true;
 }
 

@@ -51,6 +51,7 @@ add_executable(speedrunner
         src/Video.cpp
         src/TitleScreen.cpp
         src/PlatformerScene.cpp
+        src/EndScreen.cpp
         src/GameObject.cpp
         src/Player.cpp
         src/LevelLoader.cpp
