@@ -73,6 +73,10 @@ else()
     target_link_libraries(speedrunner PRIVATE SDL3_image::SDL3_image SDL3::SDL3)
 endif()
 
+target_compile_definitions(speedrunner PRIVATE
+    $<$<CONFIG:Debug>:DEBUG>
+)
+
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install") 
 
 install(TARGETS speedrunner

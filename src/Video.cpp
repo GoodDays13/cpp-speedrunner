@@ -46,7 +46,16 @@ bool Video::initWindow() {
 }
 
 bool Video::initGraphics() {
-    gpuDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, true, NULL);
+#ifdef DEBUG
+    bool debug = true;
+#else
+    bool debug = false;
+#endif
+    gpuDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, debug, NULL);
+    if (!gpuDevice) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to create GPU Device: %s", SDL_GetError());
+        return false;
+    }
 
     if (!SDL_ClaimWindowForGPUDevice(gpuDevice, window)) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not claim window with GPU Device: %s\n", SDL_GetError());
@@ -548,6 +557,10 @@ void Video::cleanup() {
     SDL_ReleaseGPUGraphicsPipeline(gpuDevice, conwayPipeline);
     for (int i = 0; i < sizeof(shaders) / sizeof(shaders[0]); i++)
         SDL_ReleaseGPUShader(gpuDevice, shaders[i]);
+    for (auto& [path, sheet] : spritesheets) {
+        SDL_ReleaseGPUTexture(gpuDevice, sheet->texture);
+    }
+    spritesheets.clear();
     for (int i = 0; i < 2; i++)
         SDL_ReleaseGPUTexture(gpuDevice, intermediates[i]);
     SDL_ReleaseGPUSampler(gpuDevice, clampSampler);
