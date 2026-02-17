@@ -25,7 +25,6 @@ class Video {
 public:
     enum Model {
         QUAD,
-        SPRITE,
     };
     struct MiscData {
         Transform transform;

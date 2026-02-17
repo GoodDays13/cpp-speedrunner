@@ -43,7 +43,7 @@ std::vector<Video::MiscData> Text::getData() {
 
 Video::RenderKey Text::getKey() {
     return {
-        Video::Model::SPRITE,
+        Video::Model::QUAD,
         font.path,
     };
 }
