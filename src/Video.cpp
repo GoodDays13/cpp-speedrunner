@@ -224,10 +224,10 @@ void Video::createBuffersAndGeometry() {
     indexInfo.size = sizeof(IndexTriangle) * 2;
 
     miscInfo.usage = SDL_GPU_BUFFERUSAGE_VERTEX;
-    miscInfo.size = std::pow(2, 20);
+    miscInfo.size = 1 << 20;
 
     miscTransferInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-    miscTransferInfo.size = std::pow(2, 20);
+    miscTransferInfo.size = 1 << 20;
 
     // Create the buffers
     vertexBuffer = SDL_CreateGPUBuffer(gpuDevice, &vertexInfo);
