@@ -2,7 +2,7 @@
 #include <SDL3/SDL_log.h>
 #include <cstdlib>
 
-GameObject::GameObject() : transform({{}, {1, 1}}), velocity({}), color({1, 1, 1, 1}) {}
+GameObject::GameObject() : transform({{}, {1, 1}}), velocity({}), color({1, 1, 1, 1}), tags(0) {}
 GameObject::GameObject(IGameWorld* game) : GameObject() {
     this->game = game;
 }
