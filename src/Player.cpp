@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
-#include <optional>
 
 void Player::handleEvent(const SDL_Event& event) {
     if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
@@ -61,34 +60,61 @@ void Player::update(float deltaTime) {
     // Keep track of remaining time to handle multiple collisions in one frame
     float remainingTime = deltaTime;
     while (remainingTime > 0.0f) {
-        std::optional<Collision> collision = std::nullopt;
-        std::shared_ptr<GameObject> other;
+        std::vector<Collision> collisions;
+        Vector2 normal;
+        float time;
         if (game) { // Sanity check
-            collision = game->checkCollisions(*this);
+            collisions = game->checkCollisions(*this);
         }
-        if (collision && (other = collision->other.lock()) && collision->time < remainingTime) {
-            if (other->tags & Tags::End) {
-                levelComplete = true;
-            } if (other->tags & Tags::Kill) {
-                dead = true;
+        if (!collisions.empty() && (time = collisions[0].time) < remainingTime) {
+            float shortestDistance = INFINITY;
+            normal = collisions[0].normal;
+
+            for (Collision collision : collisions) {
+                std::shared_ptr<GameObject> other = collision.other.lock();
+                if (other->tags & Tags::End) {
+                    levelComplete = true;
+                } if (other->tags & Tags::Kill) {
+                    dead = true;
+                }
+
+                // Find the closest point on the other object to this object
+                float left = other->transform.position.x - other->transform.scale.x / 2;
+                float right = other->transform.position.x + other->transform.scale.x / 2;
+                float bottom = other->transform.position.y - other->transform.scale.y / 2;
+                float top = other->transform.position.y + other->transform.scale.y / 2;
+                Vector2 pos = {
+                    std::clamp(transform.position.x, left, right),
+                    std::clamp(transform.position.y, bottom, top)
+                };
+                // Use the shortest distance object for normal vector
+                float distance = (pos - transform.position).magnitude();
+                if (distance < shortestDistance) {
+                    shortestDistance = distance;
+                    normal = collision.normal;
+                }
             }
 
             // Move up to the collision
-            transform.position += velocity * collision->time;
-            remainingTime -= collision->time;
+            transform.position += velocity * time;
+            remainingTime -= time;
 
             // Reflect velocity based on collision normal
-            if (collision->normal.y < 0) {
+            if (normal.y < 0) {
                 jumpTimer = 0.0f; // Cancel jump if hitting head
-            } else if (collision->normal.y > 0) {
+            } else if (normal.y > 0) {
                 coyoteTimer = coyoteTime; // Reset coyote timer when landing
             }
             // Remove component of velocity in direction of normal
-            velocity -= collision->normal * collision->normal.dot(velocity);
+            velocity -= normal * normal.dot(velocity);
 
-            // Check if touching the end
-            Vector2 mtv = computeMTV(*other);
-            transform.position += mtv;
+            // Correct for floating point errors putting you in blocks
+            // Uses MTV to just move you to the closest edge
+            for (Collision collision : collisions) {
+                std::shared_ptr<GameObject> other = collision.other.lock();
+                Vector2 mtv = computeMTV(*other);
+                transform.position += mtv;
+            }
         } else {
             // No collision, move the full remaining time
             transform.position += velocity * remainingTime;

@@ -37,6 +37,7 @@ void PlatformerScene::loadLevel() {
     auto playerPtr = std::make_shared<Player>(this);
     playerPtr->transform = levelData->player.transform;
     playerPtr->color = levelData->player.color;
+    playerPtr->setStartPosition(levelData->player.transform.position);
 
     camera.position = playerPtr->transform.position;
     camera.scale = {16, 9};
@@ -135,9 +136,9 @@ void PlatformerScene::completeLevel() {
     sceneManager->queuePushScene(std::make_unique<EndScreen>(data));
 }
 
-std::optional<Collision> PlatformerScene::checkCollisions(const GameObject& obj) {
+std::vector<Collision> PlatformerScene::checkCollisions(const GameObject& obj) {
     if (obj.velocity.x == 0.0f && obj.velocity.y == 0.0f)
-        return std::nullopt;
+        return {};
     std::vector<Collision> collisions;
     for (auto& other : objects) {
         if (other.get() == &obj)
@@ -196,9 +197,9 @@ std::optional<Collision> PlatformerScene::checkCollisions(const GameObject& obj)
 
 
     if (collisions.size() == 0)
-        return std::nullopt;
+        return collisions;
 
-    // Find the earliest collision
+    // Find the earliest collisions
     Collision& min = collisions[0];
     std::vector<Collision> minTies;
     for (Collision& c : collisions) {
@@ -211,24 +212,7 @@ std::optional<Collision> PlatformerScene::checkCollisions(const GameObject& obj)
         }
     }
 
-
-    // If there's no tie, return the earliest collision
-    if (minTies.size() <= 1)
-        return min;
-
-    // Break ties by choosing the collision with the object closest to the main object
-    Collision& closest = minTies[0];
-    for (Collision& c : minTies) {
-        if (auto other = c.other.lock()) {
-            if (auto closestOther = closest.other.lock()) {
-                if (other->transform.position.distanceSquared(obj.transform.position) < closestOther->transform.position.distanceSquared(obj.transform.position)) {
-                    closest = c;
-                }
-            }
-        }
-    }
-
-    return closest;
+    return minTies;
 }
 
 std::vector<std::weak_ptr<GameObject>> PlatformerScene::findObjectsAtCoords(Vector2 pos) {

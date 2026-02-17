@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SDL3/SDL_stdinc.h>
 #include <type_traits>
 
 struct Vector2 {
@@ -16,8 +17,13 @@ struct Vector2 {
         return {x - other.x, y - other.y};
     }
 
+    // Multiply two vectors
+    Vector2 operator*(const Vector2& other) const {
+        return {x * other.x, y * other.y};
+    }
+
     // Scale by a scalar
-    Vector2 operator*(float scalar) const {
+    Vector2 operator*(const float scalar) const {
         return {x * scalar, y * scalar};
     }
 
@@ -51,6 +57,10 @@ struct Vector2 {
         float dx = x - other.x;
         float dy = y - other.y;
         return dx * dx + dy * dy;
+    }
+
+    float magnitude() const {
+        return SDL_sqrtf(x*x + y*y);
     }
 };
 
