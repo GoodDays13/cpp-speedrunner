@@ -8,7 +8,6 @@
 #include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_gpu.h>
-#include <SDL3_image/SDL_image.h>
 #include <memory>
 
 #include "Video.h"
@@ -329,7 +328,7 @@ void Video::loadSpritesheet(std::string path, int width, int height) {
             return;
         }
 
-        surface = IMG_Load_IO(stream, true);
+        surface = SDL_LoadPNG_IO(stream, true);
 
         // SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
         transferInfo.size = static_cast<Uint32>(surface->w * surface->h * 4);

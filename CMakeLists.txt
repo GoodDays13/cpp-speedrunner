@@ -64,20 +64,28 @@ add_dependencies(speedrunner embed_shaders)
 target_include_directories(speedrunner PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_include_directories(speedrunner PRIVATE "${CMAKE_BINARY_DIR}/generated")
 
-find_package(SDL3 REQUIRED)
-find_package(SDL3_image REQUIRED)
-
+include(FetchContent)
+FetchContent_Declare(
+    SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG release-3.4.0
+)
 if(SDL3_STATIC)
-    target_link_libraries(speedrunner SDL3_image::SDL3_image-static SDL3::SDL3-static)
+    set(SDL_STATIC ON)
+    set(SDL_SHARED OFF)
 else()
-    target_link_libraries(speedrunner PRIVATE SDL3_image::SDL3_image SDL3::SDL3)
+    set(SDL_STATIC OFF)
+    set(SDL_SHARED ON)
 endif()
+FetchContent_MakeAvailable(SDL3)
+
+target_link_libraries(speedrunner PRIVATE SDL3::SDL3)
 
 target_compile_definitions(speedrunner PRIVATE
     $<$<CONFIG:Debug>:DEBUG>
 )
 
-set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install") 
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
 
 install(TARGETS speedrunner
     DESTINATION .
@@ -86,9 +94,9 @@ install(DIRECTORY assets/
     DESTINATION assets
 )
 
-if (WIN32)
-    install(IMPORTED_RUNTIME_ARTIFACTS 
-        SDL3::SDL3-shared
-        SDL3_image::SDL3_image-shared
+if (WIN32 AND NOT SDL3_STATIC)
+    install(TARGETS
+        SDL3-shared
+        RUNTIME DESTINATION .
     )
 endif()
