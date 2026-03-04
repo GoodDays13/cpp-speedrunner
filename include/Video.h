@@ -19,8 +19,6 @@
 #define SHADER_BOXBLUR shaders[3]
 #define SHADER_CONWAY shaders[4]
 
-using MeshHandle = unsigned int;
-
 class Video {
 public:
     enum Model {
@@ -28,7 +26,7 @@ public:
     };
     struct MiscData {
         Transform transform;
-        Vector4 color;
+        Vector4 color = {1, 1, 1, 1};
         unsigned int index;
     };
     struct RenderKey {
@@ -43,6 +41,10 @@ public:
     struct RenderInfo {
         std::map<RenderKey, std::vector<MiscData>> renderBatches;
         Transform camera;
+
+        void draw(RenderKey key, MiscData data);
+        void drawRect(Transform transform, Vector4 color = {1, 1, 1, 1});
+        void drawSprite(Transform transform, std::string spritesheet, unsigned int index, Vector4 color = {1, 1, 1, 1});
     };
 
     Video();

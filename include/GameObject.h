@@ -2,6 +2,7 @@
 
 #include "IGameWorld.h"
 #include "math.h"
+#include "Video.h"
 #include <SDL3/SDL_events.h>
 #include <cstdint>
 
@@ -22,6 +23,8 @@ public:
     virtual void update(float deltaTime);
 
     virtual void handleEvent(const SDL_Event& event);
+
+    virtual void render(Video::RenderInfo& info);
 
     bool isTouching(const GameObject& other);
 

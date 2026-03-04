@@ -530,6 +530,33 @@ void Video::render(RenderInfo info) {
     frameIndex++;
 }
 
+void Video::RenderInfo::draw(RenderKey key, MiscData data) {
+    renderBatches[key].push_back(data);
+}
+
+void Video::RenderInfo::drawRect(Transform transform, Vector4 color) {
+    draw({
+         .model = QUAD,
+         .spritesheet = "",
+         }, {
+         .transform = transform,
+         .color = color,
+         .index = 0,
+         }
+    );
+}
+
+void Video::RenderInfo::drawSprite(Transform transform, std::string spritesheet, unsigned int index, Vector4 color) {
+    draw({
+        .model = QUAD,
+         .spritesheet = spritesheet,
+    }, {
+         .transform = transform,
+         .color = color,
+         .index = index,
+         });
+}
+
 const SDL_DisplayMode* Video::getDisplayMode() const {
     return SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(window));
 }

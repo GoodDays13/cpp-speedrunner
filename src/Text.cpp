@@ -19,7 +19,12 @@ void Text::setTransform(Transform transform) {
     cached = {};
 }
 
-std::vector<Video::MiscData> Text::getData() {
+void Text::render(Video::RenderInfo& info) {
+    for (Video::MiscData letter : getData())
+        info.drawSprite(letter.transform, font.path, letter.index);
+}
+
+const std::vector<Video::MiscData>& Text::getData() {
     if (!cached.empty()) return cached;
     std::vector<Video::MiscData> data;
     for (int i = 0; i < text.length(); i++) {
@@ -35,15 +40,11 @@ std::vector<Video::MiscData> Text::getData() {
                 pos = transform.position.x - text.length() + 0.5f + i;
                 break;
         }
-        data.push_back({{{pos, transform.position.y}, {1, 1}}, {1, 1, 1, 1}, static_cast<unsigned int>(text[i] - ' ')});
+        data.push_back({
+            .transform = {{pos, transform.position.y}, {1, 1}},
+            .index = static_cast<unsigned int>(text[i] - ' ')
+        });
     }
     cached = data;
-    return data;
-}
-
-Video::RenderKey Text::getKey() {
-    return {
-        Video::Model::QUAD,
-        font.path,
-    };
+    return cached;
 }

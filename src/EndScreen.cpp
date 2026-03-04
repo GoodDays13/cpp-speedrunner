@@ -30,8 +30,8 @@ Video::RenderInfo EndScreen::render() {
     Text label("Time:", {{0, 1}, {1, 1}}, {"fonts/x05mo.png"}, Text::Align::Center);
     Text time(std::format("{:.3f}", completionTimeSec), {{0, 0}, {5, 1}}, {"fonts/x05mo.png"}, Text::Align::Center);
 
-    info.renderBatches[label.getKey()].append_range(label.getData());
-    info.renderBatches[time.getKey()].append_range(time.getData());
+    label.render(info);
+    time.render(info);
 
     info.camera = {{0, 0}, {16, 9}};
     return info;

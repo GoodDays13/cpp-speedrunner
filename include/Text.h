@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GameObject.h"
 #include "math.h"
 #include "Video.h"
 #include <string>
@@ -10,7 +11,7 @@ struct Font {
     float fontSize = 1;
 };
 
-class Text {
+class Text : public GameObject {
 public:
     enum class Align {
         Left,
@@ -26,8 +27,7 @@ public:
     void setText(std::string text);
     void setTransform(Transform transform);
 
-    std::vector<Video::MiscData> getData();
-    Video::RenderKey getKey();
+    void render(Video::RenderInfo& info) override;
 private:
     Font font;
     std::string text;
@@ -37,4 +37,6 @@ private:
     Align align;
 
     std::vector<Video::MiscData> cached;
+
+    const std::vector<Video::MiscData>& getData();
 };

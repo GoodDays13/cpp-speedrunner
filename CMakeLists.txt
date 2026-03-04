@@ -70,6 +70,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
     GIT_TAG release-3.4.0
 )
+set(SDL_TEST_LIBRARY OFF)
 if(SDL3_STATIC)
     set(SDL_STATIC ON)
     set(SDL_SHARED OFF)

@@ -1,4 +1,6 @@
 #include "GameObject.h"
+#include "LevelData.h"
+#include "Video.h"
 #include <SDL3/SDL_log.h>
 #include <cstdlib>
 
@@ -11,6 +13,11 @@ void GameObject::update(float deltaTime) {
 }
 
 void GameObject::handleEvent(const SDL_Event& event) {}
+
+void GameObject::render(Video::RenderInfo& info) {
+    if (tags & Tags::NoDraw) return;
+    info.drawRect(transform, color);
+}
 
 bool GameObject::isTouching(const GameObject& other) {
     float dx = std::abs(other.transform.position.x - transform.position.x);

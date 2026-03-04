@@ -101,11 +101,11 @@ Video::RenderInfo TitleScreen::render() {
     // Add title
     info.renderBatches[regular].push_back({title.transform, {0, 1, 1, 1}});
 
-    std::string quit = "Quit";
     for (size_t i = 0; i < menuItems.size(); i++) {
         Vector4 color = (i == selectedItem) ? Vector4{1, 1, 0, 1} : Vector4{1, 1, 1, 1}; // Highlight selected item in yellow
-        info.renderBatches[regular].push_back({menuItems[i].object.transform, color});
-        info.renderBatches[menuItems[i].text.getKey()].append_range(menuItems[i].text.getData());
+        menuItems[i].object.color = color;
+        menuItems[i].object.render(info);
+        menuItems[i].text.render(info);
     }
 
     info.camera = {{0, 0}, {16, 9}};
