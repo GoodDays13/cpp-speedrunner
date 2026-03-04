@@ -135,7 +135,7 @@ void PlatformerScene::completeLevel() {
     sceneManager->queuePushScene(std::make_unique<EndScreen>(data));
 }
 
-std::vector<Collision> PlatformerScene::checkCollisions(const GameObject& obj) {
+std::vector<Collision> PlatformerScene::checkCollisions(const Player& obj) {
     if (obj.velocity.x == 0.0f && obj.velocity.y == 0.0f)
         return {};
     std::vector<Collision> collisions;

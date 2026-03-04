@@ -21,6 +21,8 @@ public:
     Player(IGameWorld* game) : GameObject(game) {}
     Player(IGameWorld* game, Vector2 pos) : GameObject(game) { transform.position = pos; startPosition = pos; }
 
+    Vector2 velocity;
+
     void handleEvent(const SDL_Event& event) override;
     void update(float deltaTime) override;
 

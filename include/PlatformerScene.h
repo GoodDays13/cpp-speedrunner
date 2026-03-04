@@ -37,7 +37,7 @@ public:
 
     void completeLevel() override;
 
-    std::vector<Collision> checkCollisions(const GameObject& obj) override;
+    std::vector<Collision> checkCollisions(const Player& obj) override;
     std::vector<std::weak_ptr<GameObject>> findObjectsAtCoords(Vector2 pos) override;
     std::weak_ptr<GameObject> createGameObject() override;
     void destroyGameObject(const std::weak_ptr<GameObject> obj) override;
